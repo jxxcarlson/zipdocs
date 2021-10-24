@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Abstract exposing (Abstract)
+import Authentication exposing (AuthenticationDict)
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Browser.Navigation exposing (Key)
@@ -22,6 +23,11 @@ type alias FrontendModel =
 
     -- ADMIN
     , statusReport : List String
+
+    -- USER
+    , currentUser : Maybe User
+    , inputUsername : String
+    , inputPassword : String
 
     -- UI
     , windowWidth : Int
@@ -59,6 +65,9 @@ type alias BackendModel =
     , randomSeed : Random.Seed
     , uuidCount : Int
     , randomAtmosphericInt : Maybe Int
+
+    -- USER
+    , authenticationDict : AuthenticationDict
 
     -- DATA
     , documentDict : DocumentDict
@@ -103,6 +112,10 @@ type FrontendMsg
     | ChangePopupStatus PopupStatus
     | CloseEditor
       -- USER
+    | SignIn
+    | SignOut
+    | InputUsername String
+    | InputPassword String
       -- DOC
     | InputText String
     | InputSearchKey String
@@ -140,6 +153,8 @@ type ToBackend
       -- ADMIN
     | RunTask
     | GetStatus
+      -- USER
+    | SignInOrSignUp String String
       -- DOCUMENT
     | SaveDocument Document
     | GetDocumentByAuthorId String
@@ -156,8 +171,11 @@ type BackendMsg
 
 type ToFrontend
     = NoOpToFrontend
+      -- USEr
+    | SendUser User
       -- DOCUMENT
     | SendDocument Document
+    | SendDocuments (List Document)
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool

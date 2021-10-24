@@ -1,6 +1,7 @@
 module Backend exposing (..)
 
 import Abstract exposing (Abstract)
+import Authentication
 import Backend.Cmd
 import Backend.Update
 import Config
@@ -40,6 +41,9 @@ init =
       , randomAtmosphericInt = Nothing
       , currentTime = Time.millisToPosix 0
 
+      -- USER
+      , authenticationDict = Dict.empty
+
       -- DATA
       , documentDict = Dict.empty
       , authorIdDict = Dict.empty
@@ -64,7 +68,7 @@ update msg model =
             ( model, Cmd.none )
 
         GotAtomsphericRandomNumber result ->
-            Backend.Update.gotAtomsphericRandomNumber model result
+            Backend.Update.gotAtmosphericRandomNumber model result
 
         Tick newTime ->
             ( { model | currentTime = newTime } |> updateAbstracts |> makeLinks, Cmd.none )
@@ -82,6 +86,24 @@ updateFromFrontend sessionId clientId msg model =
 
         GetStatus ->
             ( model, sendToFrontend clientId (StatusReport (statusReport model)) )
+
+        -- USER
+        SignInOrSignUp username encryptedPassword ->
+            case Dict.get username model.authenticationDict of
+                Just userData ->
+                    if Authentication.verify username encryptedPassword model.authenticationDict then
+                        ( model
+                        , Cmd.batch
+                            [ sendToFrontend clientId (SendDocuments <| Backend.Update.getUserDocuments userData.user model.documentDict)
+                            , sendToFrontend clientId (SendUser userData.user)
+                            ]
+                        )
+
+                    else
+                        ( model, sendToFrontend clientId (SendMessage <| "Sorry, password and username don't match") )
+
+                Nothing ->
+                    Backend.Update.setupUser model clientId username encryptedPassword
 
         -- DOCUMENTS
         CreateDocument doc_ ->

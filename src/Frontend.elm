@@ -1,5 +1,6 @@
 module Frontend exposing (..)
 
+import Authentication
 import Browser exposing (UrlRequest(..))
 import Browser.Events
 import Browser.Navigation as Nav
@@ -58,6 +59,11 @@ init url key =
 
       -- ADMIN
       , statusReport = []
+
+      -- USER
+      , currentUser = Nothing
+      , inputUsername = ""
+      , inputPassword = ""
 
       -- UI
       , windowWidth = 600
@@ -158,6 +164,25 @@ update msg model =
                 [ UrlManager.handleDocId url
                 ]
             )
+
+        -- USER
+        SignIn ->
+            if String.length model.inputPassword >= 8 then
+                ( model
+                , sendToBackend (SignInOrSignUp model.inputUsername (Authentication.encryptForTransit model.inputPassword))
+                )
+
+            else
+                ( { model | message = "Password must be at least 8 letters long." }, Cmd.none )
+
+        SignOut ->
+            ( model, Cmd.none )
+
+        InputUsername str ->
+            ( model, Cmd.none )
+
+        InputPassword str ->
+            ( model, Cmd.none )
 
         -- UI
         GotNewWindowDimensions w h ->
@@ -302,6 +327,13 @@ updateFromBackend msg model =
 
         SetShowEditor flag ->
             ( { model | showEditor = flag }, Cmd.none )
+
+        -- USER
+        SendUser _ ->
+            ( model, Cmd.none )
+
+        SendDocuments _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> { title : String, body : List (Html.Html FrontendMsg) }
