@@ -73,10 +73,20 @@ viewRenderedTextOnly model =
     E.column (mainColumnStyle model)
         [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
             [ header model (E.px <| smallAppWidth model)
-            , E.column [ E.spacing 12 ]
+            , E.row [ E.spacing 12 ]
                 [ E.column [ E.spacing 18 ]
                     [ viewRendered model (smallAppWidth model + 20)
                     ]
+                , E.column
+                    [ E.width (E.px 300)
+                    , E.height (E.px (appHeight_ model - 110))
+                    , Font.size 14
+                    , Background.color (E.rgb 0.95 0.95 1.0)
+                    , E.paddingXY 12 18
+                    , Font.color (E.rgb 0.1 0.1 1.0)
+                    , E.spacing 8
+                    ]
+                    (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Links") :: viewLinks model)
                 ]
             , footer model (smallAppWidth model)
 
@@ -174,6 +184,16 @@ viewRendered model width_ =
 
         --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
         ]
+
+
+viewLinks : Model -> List (Element FrontendMsg)
+viewLinks model =
+    List.map viewLink model.links
+
+
+viewLink : DocumentLink -> Element FrontendMsg
+viewLink docLink =
+    E.newTabLink [] { url = docLink.url, label = E.el [] (E.text docLink.label) }
 
 
 settings : Markup.API.Settings
