@@ -34,10 +34,9 @@ The second link is a public one that you can share with colleagues and
 friends.  With it anyone can read your document but not
 edit it.  Look in the footer of the app for the links.
 
-"""
+
 ![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
-
-
+"""
 
 
 docsNotFound =
