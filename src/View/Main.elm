@@ -13,7 +13,7 @@ import View.Button as Button
 import View.Color as Color
 import View.Input
 import View.Style
-import View.Utility
+import View.Utility as Utility exposing (hideIf)
 
 
 type alias Model =
@@ -123,6 +123,7 @@ messageRow model width_ =
 header model width_ =
     E.row [ E.spacing 12, E.width width_ ]
         [ Button.newDocument
+        , Utility.hideIf model.showEditor Button.closeEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
 

@@ -1,5 +1,6 @@
 module View.Button exposing
-    ( export
+    ( closeEditor
+    , export
     , exportToLaTeX
     , exportToMarkown
     , getDocument
@@ -72,7 +73,7 @@ toggleEditor model =
             else
                 "Show Editor"
     in
-    buttonTemplate [ Background.color Color.darkBlue ] ToggleEditor title
+    buttonTemplate [ Background.color Color.darkBlue ] CloseEditor title
 
 
 
@@ -123,6 +124,11 @@ printToPDF model =
 newDocument : Element FrontendMsg
 newDocument =
     buttonTemplate [] NewDocument "New Document"
+
+
+closeEditor : Element FrontendMsg
+closeEditor =
+    buttonTemplate [] CloseEditor "Close Editor"
 
 
 help =

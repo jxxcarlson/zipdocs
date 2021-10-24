@@ -101,7 +101,7 @@ type FrontendMsg
     | GotViewport Dom.Viewport
     | SetViewPortForElement (Result Dom.Error ( Dom.Element, Dom.Viewport ))
     | ChangePopupStatus PopupStatus
-    | ToggleEditor
+    | CloseEditor
       -- USER
       -- DOC
     | InputText String

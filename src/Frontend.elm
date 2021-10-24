@@ -180,8 +180,8 @@ update msg model =
         NoOpFrontendMsg ->
             ( model, Cmd.none )
 
-        ToggleEditor ->
-            ( { model | showEditor = not model.showEditor }, Cmd.none )
+        CloseEditor ->
+            ( { model | showEditor = False }, Cmd.none )
 
         Help docId ->
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
