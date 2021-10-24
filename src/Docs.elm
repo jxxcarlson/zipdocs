@@ -39,7 +39,7 @@ Here is a [sample of what people have made with Zipdocs](https://zipdocs.lamdera
 
 ![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
 
-
+*TIP.* Use Zipdocs to write a short note, then post the link on your web page.
 """
 
 
