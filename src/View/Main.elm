@@ -188,7 +188,7 @@ viewRendered model width_ =
 
 viewLinks : Model -> List (Element FrontendMsg)
 viewLinks model =
-    List.map viewLink model.links
+    List.map viewLink (List.sortBy (\l -> l.label) model.links)
 
 
 viewLink : DocumentLink -> Element FrontendMsg
