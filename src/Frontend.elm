@@ -5,6 +5,7 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Config
 import Data
+import Docs
 import Document exposing (Access(..))
 import File.Download as Download
 import Frontend.Cmd
@@ -68,8 +69,8 @@ init url key =
       , counter = 0
       , inputSearchKey = initialSearchKey url
       , authorId = ""
-      , documents = [ Data.notSignedIn ]
-      , currentDocument = Data.notSignedIn
+      , documents = [ Docs.notSignedIn ]
+      , currentDocument = Docs.notSignedIn
       , printingState = PrintWaiting
       , documentDeleteState = WaitingForDeleteAction
       , language = Lang.Lang.MiniLaTeX
@@ -311,7 +312,7 @@ updateFromBackend msg model =
 
 view : Model -> { title : String, body : List (Html.Html FrontendMsg) }
 view model =
-    { title = "ZipTek"
+    { title = Config.appName
     , body =
         [ View.Main.view model ]
     }

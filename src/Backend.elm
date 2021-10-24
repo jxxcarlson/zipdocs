@@ -2,8 +2,10 @@ module Backend exposing (..)
 
 import Backend.Cmd
 import Backend.Update
+import Config
 import Data
 import Dict
+import Docs
 import Document exposing (Access(..))
 import Lamdera exposing (ClientId, SessionId, sendToFrontend)
 import List.Extra
@@ -43,8 +45,8 @@ init =
 
       -- DOCUMENTS
       , documents =
-            [ Data.docsNotFound
-            , Data.notSignedIn
+            [ Docs.docsNotFound
+            , Docs.notSignedIn
             ]
       }
     , Backend.Cmd.getRandomNumber
@@ -107,7 +109,7 @@ updateFromFrontend sessionId clientId msg model =
                     Dict.insert publicIdTokenData.token doc.id model.publicIdDict
 
                 message =
-                    "Author link: " ++ "https://ziptek.lamdera.app/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ "https://ziptek.lamdera.app/p/" ++ publicIdTokenData.token
+                    "Author link: " ++ "https://" ++ Config.appName ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ "https://" ++ Config.appName ++ "/p/" ++ publicIdTokenData.token
             in
             ( { model | randomSeed = publicIdTokenData.seed, documentDict = documentDict, authorIdDict = authorIdDict, publicIdDict = publicIdDict }
             , Cmd.batch
@@ -142,7 +144,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ sendToFrontend clientId (SendDocument doc)
                                 , sendToFrontend clientId (SetShowEditor True)
-                                , sendToFrontend clientId (SendMessage ("public link: https://ziptek.lamdera.app/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage ("public link: https://" ++ Config.appName ++ "/p/" ++ doc.publicId))
                                 ]
                             )
 

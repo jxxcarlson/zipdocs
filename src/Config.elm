@@ -1,5 +1,5 @@
 module Config exposing
-    ( administrator
+    ( appName
     , appUrl
     , helpDocumentId
     , pdfServer
@@ -7,16 +7,16 @@ module Config exposing
     )
 
 
+appName =
+    "Zipdocs"
+
+
 appUrl =
-    "https://cayatex.lamdera.app"
+    "https://zipdocs.lamdera.app"
 
 
 pdfServer =
     "https://pdfserv.app"
-
-
-administrator =
-    "jxxcarlson"
 
 
 startupHelpDocumentId =

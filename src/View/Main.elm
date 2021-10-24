@@ -1,5 +1,6 @@
 module View.Main exposing (view)
 
+import Config
 import Document exposing (Access(..), Document)
 import Element as E exposing (Element)
 import Element.Background as Background
@@ -119,7 +120,7 @@ header model width_ =
         , wordCount model
 
         -- , Button.help
-        , E.el [ E.alignRight ] (title "ZipTek")
+        , E.el [ E.alignRight ] (title Config.appName)
         ]
 
 
