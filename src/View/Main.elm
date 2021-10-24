@@ -74,7 +74,7 @@ viewRenderedTextOnly model =
         [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
             [ header model (E.px <| smallAppWidth model)
             , E.column [ E.spacing 12 ]
-                [ E.row [ E.spacing 12 ]
+                [ E.column [ E.spacing 18 ]
                     [ viewRendered model (smallAppWidth model + 20)
                     ]
                 ]
@@ -169,7 +169,7 @@ viewRendered model width_ =
         , View.Utility.elementAttribute "id" "__RENDERED_TEXT__"
         ]
         [ View.Utility.katexCSS
-        , E.column [ E.spacing 8, E.width (E.px (panelWidth_ model - 60)) ]
+        , E.column [ E.spacing 18, E.width (E.px (panelWidth_ model - 60)) ]
             (Markup.API.renderFancy settings model.currentDocument.language model.counter (String.lines model.currentDocument.content))
 
         --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
