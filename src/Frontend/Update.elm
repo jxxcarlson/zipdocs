@@ -54,4 +54,4 @@ newDocument model =
 
 updateCurrentDocument : Document -> FrontendModel -> FrontendModel
 updateCurrentDocument doc model =
-    { model | currentDocument = doc }
+    { model | currentDocument = Just doc }

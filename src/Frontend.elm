@@ -15,7 +15,7 @@ import Frontend.Update
 import Html exposing (Html)
 import LaTeX.Export.API
 import Lamdera exposing (sendToBackend)
-import Lang.Lang
+import Lang.Lang as Lang exposing (Lang(..))
 import List.Extra
 import Markup.API
 import Process
@@ -75,11 +75,11 @@ init url key =
       , counter = 0
       , inputSearchKey = initialSearchKey url
       , authorId = ""
-      , documents = [ Docs.notSignedIn ]
-      , currentDocument = Docs.notSignedIn
+      , documents = []
+      , currentDocument = Just Docs.notSignedIn
       , printingState = PrintWaiting
       , documentDeleteState = WaitingForDeleteAction
-      , language = Lang.Lang.MiniLaTeX
+      , language = Lang.MiniLaTeX
       , links = []
       }
     , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetLinks ]
@@ -176,7 +176,18 @@ update msg model =
                 ( { model | message = "Password must be at least 8 letters long." }, Cmd.none )
 
         SignOut ->
-            ( model, Cmd.none )
+            ( { model
+                | currentUser = Nothing
+                , currentDocument = Nothing
+                , documents = []
+                , message = "Signed out"
+                , inputSearchKey = ""
+                , inputUsername = ""
+                , inputPassword = ""
+              }
+            , -- Cmd.none
+              Nav.pushUrl model.key "/"
+            )
 
         InputUsername str ->
             ( model, Cmd.none )
@@ -213,22 +224,24 @@ update msg model =
 
         -- DOCUMENT
         InputText str ->
-            let
-                document =
-                    model.currentDocument
+            case model.currentDocument of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                parseData =
-                    Markup.API.parse document.language model.counter (String.lines document.content)
+                Just doc ->
+                    let
+                        parseData =
+                            Markup.API.parse doc.language model.counter (String.lines doc.content)
 
-                newTitle =
-                    Markup.API.getTitle parseData.ast |> Maybe.withDefault "Untitled"
+                        newTitle =
+                            Markup.API.getTitle parseData.ast |> Maybe.withDefault "Untitled"
 
-                newDocument =
-                    { document | content = str }
-            in
-            ( { model | currentDocument = newDocument, counter = model.counter + 1 }
-            , sendToBackend (SaveDocument document)
-            )
+                        newDocument =
+                            { doc | content = str }
+                    in
+                    ( { model | currentDocument = Just newDocument, counter = model.counter + 1 }
+                    , sendToBackend (SaveDocument doc)
+                    )
 
         InputAuthorId str ->
             ( { model | authorId = str }, Cmd.none )
@@ -261,22 +274,16 @@ update msg model =
             ( model, Download.string fileName_ "text/markdown" markdownText )
 
         ExportToLaTeX ->
-            let
-                laTeXText =
-                    LaTeX.Export.API.export model.language model.currentDocument.content
-
-                fileName =
-                    "foo" |> String.replace " " "-" |> String.toLower |> (\name -> name ++ ".tex")
-            in
-            ( model, Download.string fileName "application/x-latex" laTeXText )
+            issueCommandIfDefined model.currentDocument model (exportToLaTeX model.language)
 
         Export ->
-            let
-                fileName =
-                    "doc" |> String.replace " " "-" |> String.toLower |> (\name -> name ++ ".l1")
-            in
-            ( model, Download.string fileName "text/plain" model.currentDocument.content )
+            issueCommandIfDefined model.currentDocument model exportDoc
 
+        --let
+        --    fileName =
+        --        "doc" |> String.replace " " "-" |> String.toLower |> (\name -> name ++ ".l1")
+        --in
+        --( model, Download.string fileName "text/plain" model.currentDocument.content )
         PrintToPDF ->
             PDF.print model
 
@@ -284,18 +291,63 @@ update msg model =
             PDF.gotLink model result
 
         ChangePrintingState printingState ->
-            let
-                cmd =
-                    if printingState == PrintWaiting then
-                        Process.sleep 1000 |> Task.perform (always (FinallyDoCleanPrintArtefacts model.currentDocument.id))
-
-                    else
-                        Cmd.none
-            in
-            ( { model | printingState = printingState }, cmd )
+            -- TODO: review this
+            issueCommandIfDefined model.currentDocument { model | printingState = printingState } (changePrintingState printingState)
 
         FinallyDoCleanPrintArtefacts privateId ->
             ( model, Cmd.none )
+
+
+changePrintingState printingState doc =
+    if printingState == PrintWaiting then
+        Process.sleep 1000 |> Task.perform (always (FinallyDoCleanPrintArtefacts doc.id))
+
+    else
+        Cmd.none
+
+
+exportToLaTeX : Lang.Lang -> Document.Document -> Cmd msg
+exportToLaTeX lang doc =
+    let
+        laTeXText =
+            LaTeX.Export.API.export lang doc.content
+
+        fileName =
+            doc.id ++ fileExtension doc.language
+    in
+    Download.string fileName "application/x-latex" laTeXText
+
+
+exportDoc : Document.Document -> Cmd msg
+exportDoc doc =
+    let
+        fileName =
+            doc.id ++ fileExtension doc.language
+    in
+    Download.string fileName "text/plain" doc.content
+
+
+fileExtension : Lang.Lang -> String
+fileExtension lang =
+    case lang of
+        L1 ->
+            ".l1"
+
+        MiniLaTeX ->
+            ".tex"
+
+        Markdown ->
+            ".md"
+
+
+issueCommandIfDefined : Maybe a -> Model -> (a -> Cmd msg) -> ( Model, Cmd msg )
+issueCommandIfDefined maybeSomething model cmdMsg =
+    case maybeSomething of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just something ->
+            ( model, cmdMsg something )
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
@@ -313,7 +365,7 @@ updateFromBackend msg model =
                 message =
                     "Documents: " ++ String.fromInt (List.length documents)
             in
-            ( { model | currentDocument = doc, language = doc.language, documents = documents }, Cmd.none )
+            ( { model | currentDocument = Just doc, language = doc.language, documents = documents }, Cmd.none )
 
         GotLinks links ->
             ( { model | links = links }, Cmd.none )
@@ -329,11 +381,11 @@ updateFromBackend msg model =
             ( { model | showEditor = flag }, Cmd.none )
 
         -- USER
-        SendUser _ ->
-            ( model, Cmd.none )
+        SendUser user ->
+            ( { model | currentUser = Just user }, Cmd.none )
 
-        SendDocuments _ ->
-            ( model, Cmd.none )
+        SendDocuments documents ->
+            ( { model | documents = documents }, Cmd.none )
 
 
 view : Model -> { title : String, body : List (Html.Html FrontendMsg) }

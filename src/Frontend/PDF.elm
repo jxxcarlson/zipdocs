@@ -10,12 +10,17 @@ import Types exposing (FrontendModel, FrontendMsg(..), PrintingState(..), ToBack
 
 
 print model =
-    ( { model | message = "printToPDF" }
-    , Cmd.batch
-        [ generatePdf model.currentDocument
-        , Process.sleep 1 |> Task.perform (always (ChangePrintingState PrintProcessing))
-        ]
-    )
+    case model.currentDocument of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just doc ->
+            ( { model | message = "printToPDF" }
+            , Cmd.batch
+                [ generatePdf doc
+                , Process.sleep 1 |> Task.perform (always (ChangePrintingState PrintProcessing))
+                ]
+            )
 
 
 generatePdf : Document -> Cmd FrontendMsg

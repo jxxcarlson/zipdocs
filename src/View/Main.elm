@@ -137,7 +137,12 @@ header model width_ =
 
 wordCount : Model -> Element FrontendMsg
 wordCount model =
-    E.el [ Font.size 14, Font.color Color.lightGray ] (E.text <| "words: " ++ (String.fromInt <| Document.wordCount model.currentDocument))
+    case model.currentDocument of
+        Nothing ->
+            E.none
+
+        Just doc ->
+            E.el [ Font.size 14, Font.color Color.lightGray ] (E.text <| "words: " ++ (String.fromInt <| Document.wordCount doc))
 
 
 viewEditor : Model -> Int -> Element FrontendMsg
@@ -152,39 +157,49 @@ viewEditor model width_ =
 
 viewEditor_ : Model -> Int -> Element FrontendMsg
 viewEditor_ model width_ =
-    Input.multiline
-        [ E.height (E.px (panelHeight_ model))
-        , E.width (E.px width_)
-        , Font.size 14
-        , Background.color (E.rgb255 240 241 255)
-        ]
-        { onChange = InputText
-        , text = model.currentDocument.content
-        , placeholder = Nothing
-        , label = Input.labelHidden "Enter source text here"
-        , spellcheck = False
-        }
+    case model.currentDocument of
+        Nothing ->
+            E.none
+
+        Just doc ->
+            Input.multiline
+                [ E.height (E.px (panelHeight_ model))
+                , E.width (E.px width_)
+                , Font.size 14
+                , Background.color (E.rgb255 240 241 255)
+                ]
+                { onChange = InputText
+                , text = doc.content
+                , placeholder = Nothing
+                , label = Input.labelHidden "Enter source text here"
+                , spellcheck = False
+                }
 
 
 viewRendered : Model -> Int -> Element FrontendMsg
 viewRendered model width_ =
-    E.column
-        [ E.paddingEach { left = 24, right = 24, top = 32, bottom = 96 }
-        , View.Style.bgGray 1.0
-        , E.width (E.px width_)
-        , E.height (E.px (panelHeight_ model))
-        , E.centerX
-        , Font.size 14
-        , E.alignTop
-        , E.scrollbarY
-        , View.Utility.elementAttribute "id" "__RENDERED_TEXT__"
-        ]
-        [ View.Utility.katexCSS
-        , E.column [ E.spacing 18, E.width (E.px (panelWidth_ model - 60)) ]
-            (Markup.API.renderFancy settings model.currentDocument.language model.counter (String.lines model.currentDocument.content))
+    case model.currentDocument of
+        Nothing ->
+            E.none
 
-        --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
-        ]
+        Just doc ->
+            E.column
+                [ E.paddingEach { left = 24, right = 24, top = 32, bottom = 96 }
+                , View.Style.bgGray 1.0
+                , E.width (E.px width_)
+                , E.height (E.px (panelHeight_ model))
+                , E.centerX
+                , Font.size 14
+                , E.alignTop
+                , E.scrollbarY
+                , View.Utility.elementAttribute "id" "__RENDERED_TEXT__"
+                ]
+                [ View.Utility.katexCSS
+                , E.column [ E.spacing 18, E.width (E.px (panelWidth_ model - 60)) ]
+                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content))
+
+                --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
+                ]
 
 
 viewLinks : Model -> List (Element FrontendMsg)

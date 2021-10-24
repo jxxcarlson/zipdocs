@@ -37,7 +37,7 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
-    , currentDocument : Document
+    , currentDocument : Maybe Document
     , documents : List Document
     , language : Lang.Lang.Lang
     , inputSearchKey : String

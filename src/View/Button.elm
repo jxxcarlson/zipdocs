@@ -118,7 +118,7 @@ printToPDF model =
                 , Events.onClick (ChangePrintingState PrintWaiting)
                 , View.Utility.elementAttribute "target" "_blank"
                 ]
-                { url = Config.pdfServer ++ "/pdf/" ++ model.currentDocument.id, label = E.el [] (E.text "Click for PDF") }
+                { url = Config.pdfServer ++ "/pdf/" ++ (Maybe.map .id model.currentDocument |> Maybe.withDefault "???"), label = E.el [] (E.text "Click for PDF") }
 
 
 newDocument : Element FrontendMsg

@@ -3,6 +3,7 @@ module Docs exposing (docsNotFound, notSignedIn)
 import Document exposing (Document, empty)
 
 
+notSignedIn : Document
 notSignedIn =
     { empty
         | content = welcomeText
