@@ -193,7 +193,7 @@ viewLinks model =
 
 viewLink : DocumentLink -> Element FrontendMsg
 viewLink docLink =
-    E.newTabLink [] { url = docLink.url, label = E.el [] (E.text docLink.label) }
+    E.link [] { url = docLink.url, label = E.el [] (E.text docLink.label) }
 
 
 settings : Markup.API.Settings
