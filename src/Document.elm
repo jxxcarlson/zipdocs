@@ -1,8 +1,6 @@
 module Document exposing
     ( Access(..)
     , Document
-    , changeSlug
-    , dateResidue
     , empty
     , wordCount
     )

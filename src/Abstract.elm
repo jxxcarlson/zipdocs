@@ -1,4 +1,4 @@
-module Abstract exposing (getAbstract, getNormalizedAbstract)
+module Abstract exposing (Abstract, empty, get, getDigest, getNormalizedAbstract, toString)
 
 import Lang.Lang as Lang
 import Parser exposing ((|.), (|=), Parser)
@@ -8,8 +8,39 @@ type alias Abstract =
     { title : String, author : String, abstract : String, tags : String }
 
 
-getAbstract : Lang.Lang -> String -> Abstract
-getAbstract lang source =
+toString : Abstract -> String
+toString a =
+    [ a.title, a.author, a.tags ] |> String.join "; "
+
+
+empty =
+    { title = ""
+    , author = ""
+    , abstract = ""
+    , tags = ""
+    }
+
+
+{-|
+
+    > getDigest MiniLaTeX mi
+    "intro to chem p.j. snodgrass  best, course, ever" : String
+
+    > getDigest Markdown ma
+    "intro to chem p.j. snodgrass  best, courser, ever"
+
+-}
+getDigest : Lang.Lang -> String -> String
+getDigest lang source =
+    let
+        a =
+            get lang source
+    in
+    [ a.title, a.author, a.abstract, a.tags ] |> String.join " " |> String.toLower
+
+
+get : Lang.Lang -> String -> Abstract
+get lang source =
     { title = getItem lang "title" source
     , author = getItem lang "author" source
     , abstract = getItem lang "abstract" source

@@ -1,5 +1,6 @@
 module Types exposing (..)
 
+import Abstract exposing (Abstract)
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Browser.Navigation exposing (Key)
@@ -8,7 +9,6 @@ import Dict exposing (Dict)
 import Document exposing (Document)
 import Http
 import Lang.Lang
-import Markup.API
 import Random
 import Time
 import Url exposing (Url)
@@ -60,13 +60,31 @@ type alias BackendModel =
     , randomAtmosphericInt : Maybe Int
 
     -- DATA
-    , documentDict : Dict String Document
-    , authorIdDict : Dict String String
-    , publicIdDict : Dict String String
+    , documentDict : DocumentDict
+    , authorIdDict : AuthorDict
+    , publicIdDict : PublidIdDict
+    , abstractDict : AbstractDict
+    , links : List { label : String, url : String }
 
     -- DOCUMENT
     , documents : List Document
     }
+
+
+type alias AbstractDict =
+    Dict String Abstract
+
+
+type alias AuthorDict =
+    Dict String String
+
+
+type alias PublidIdDict =
+    Dict String String
+
+
+type alias DocumentDict =
+    Dict String Document
 
 
 type FrontendMsg

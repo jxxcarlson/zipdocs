@@ -1,14 +1,16 @@
 module Backend exposing (..)
 
+import Abstract exposing (Abstract)
 import Backend.Cmd
 import Backend.Update
 import Config
 import Data
-import Dict
+import Dict exposing (Dict)
 import Docs
 import Document exposing (Access(..))
 import Lamdera exposing (ClientId, SessionId, sendToFrontend)
 import List.Extra
+import Maybe.Extra
 import Random
 import Time
 import Token
@@ -24,7 +26,7 @@ app =
         { init = init
         , update = update
         , updateFromFrontend = updateFromFrontend
-        , subscriptions = \m -> Time.every 10000 Tick
+        , subscriptions = \m -> Time.every (10 * 1000) Tick
         }
 
 
@@ -42,6 +44,8 @@ init =
       , documentDict = Dict.empty
       , authorIdDict = Dict.empty
       , publicIdDict = Dict.empty
+      , abstractDict = Dict.empty
+      , links = []
 
       -- DOCUMENTS
       , documents =
@@ -63,7 +67,7 @@ update msg model =
             Backend.Update.gotAtomsphericRandomNumber model result
 
         Tick newTime ->
-            ( { model | currentTime = newTime }, Cmd.none )
+            ( { model | currentTime = newTime } |> updateAbstracts |> makeLinks, Cmd.none )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -177,6 +181,28 @@ sendDoc model clientId path =
             )
 
 
+makeLinks : Model -> Model
+makeLinks model =
+    let
+        links =
+            List.foldl (\docId acc -> makeLink docId model.documentDict model.abstractDict :: acc) [] (Dict.keys model.documentDict)
+    in
+    { model | links = Maybe.Extra.values links }
+
+
+makeLink : String -> DocumentDict -> AbstractDict -> Maybe { label : String, url : String }
+makeLink docId documentDict abstractDict =
+    case ( Dict.get docId documentDict, Dict.get docId abstractDict ) of
+        ( Nothing, _ ) ->
+            Nothing
+
+        ( _, Nothing ) ->
+            Nothing
+
+        ( Just doc, Just abstr ) ->
+            Just { label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
+
+
 statusReport : Model -> List String
 statusReport model =
     let
@@ -197,6 +223,10 @@ statusReport model =
         items =
             List.map (\( a, b ) -> authorUrl a ++ " : " ++ b ++ " : " ++ gist b) pairs
 
+        abstracts : List String
+        abstracts =
+            Dict.values model.abstractDict |> List.map Abstract.toString
+
         firstEntry : String
         firstEntry =
             "Atmospheric Int: " ++ (Maybe.map String.fromInt model.randomAtmosphericInt |> Maybe.withDefault "Nothing")
@@ -204,7 +234,7 @@ statusReport model =
         secondEntry =
             "Dictionary size: " ++ String.fromInt (List.length pairs)
     in
-    firstEntry :: secondEntry :: items
+    firstEntry :: secondEntry :: items ++ abstracts
 
 
 authorUrl : String -> String
@@ -225,3 +255,30 @@ publicUrl publicId =
 publicLink : String -> String
 publicLink publicId =
     "[Public](" ++ publicUrl publicId ++ ")"
+
+
+updateAbstracts : Model -> Model
+updateAbstracts model =
+    let
+        ids =
+            Dict.keys model.documentDict
+
+        abstractDict =
+            List.foldl (\id runningAbstractDict -> putAbstract id model.documentDict runningAbstractDict) model.abstractDict ids
+    in
+    { model | abstractDict = abstractDict }
+
+
+putAbstract : String -> DocumentDict -> AbstractDict -> AbstractDict
+putAbstract docId documentDict abstractDict =
+    Dict.insert docId (getAbstract documentDict docId) abstractDict
+
+
+getAbstract : Dict String Document.Document -> String -> Abstract
+getAbstract documentDict id =
+    case Dict.get id documentDict of
+        Nothing ->
+            Abstract.empty
+
+        Just doc ->
+            Abstract.get doc.language doc.content
