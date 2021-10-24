@@ -38,6 +38,7 @@ type alias FrontendModel =
     , printingState : PrintingState
     , documentDeleteState : DocumentDeleteState
     , counter : Int
+    , links : List DocumentLink
     }
 
 
@@ -64,11 +65,15 @@ type alias BackendModel =
     , authorIdDict : AuthorDict
     , publicIdDict : PublidIdDict
     , abstractDict : AbstractDict
-    , links : List { label : String, url : String }
+    , links : List DocumentLink
 
     -- DOCUMENT
     , documents : List Document
     }
+
+
+type alias DocumentLink =
+    { label : String, url : String }
 
 
 type alias AbstractDict =
@@ -140,6 +145,7 @@ type ToBackend
     | GetDocumentByAuthorId String
     | GetDocumentByPublicId String
     | CreateDocument Document
+    | GetLinks
 
 
 type BackendMsg
@@ -155,3 +161,4 @@ type ToFrontend
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool
+    | GotLinks (List DocumentLink)

@@ -74,8 +74,9 @@ init url key =
       , printingState = PrintWaiting
       , documentDeleteState = WaitingForDeleteAction
       , language = Lang.Lang.MiniLaTeX
+      , links = []
       }
-    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path ]
+    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetLinks ]
     )
 
 
@@ -272,16 +273,6 @@ update msg model =
             ( model, Cmd.none )
 
 
-
---CYT msg_ ->
---    case msg_ of
---        CYDocumentLink docId ->
---            ( model, sendToBackend (GetDocumentById docId) )
---
---        _ ->
---            ( model, Cmd.none )
-
-
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
@@ -298,6 +289,9 @@ updateFromBackend msg model =
                     "Documents: " ++ String.fromInt (List.length documents)
             in
             ( { model | currentDocument = doc, language = doc.language, documents = documents }, Cmd.none )
+
+        GotLinks links ->
+            ( { model | links = links }, Cmd.none )
 
         SendMessage message ->
             ( { model | message = message }, Cmd.none )

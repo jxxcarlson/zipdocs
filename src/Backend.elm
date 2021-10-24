@@ -165,6 +165,9 @@ updateFromFrontend sessionId clientId msg model =
                         Just doc ->
                             ( model, Cmd.batch [ sendToFrontend clientId (SendDocument doc), sendToFrontend clientId (SetShowEditor False) ] )
 
+        GetLinks ->
+            ( model, sendToFrontend clientId (GotLinks model.links) )
+
 
 sendDoc model clientId path =
     case List.head (List.filter (\doc -> doc.publicId == String.dropLeft 3 path) model.documents) of
