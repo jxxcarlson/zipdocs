@@ -35,6 +35,8 @@ edit it.
 
 Look in the footer of the app for the links.
 
+Here is a [sample of what people have made with Zipdocs](https://zipdocs.lamdera.app/p/ca157-hu054)
+
 ![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
 
 
