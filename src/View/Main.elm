@@ -123,7 +123,7 @@ messageRow model width_ =
 header model width_ =
     E.row [ E.spacing 12, E.width width_ ]
         [ Button.newDocument
-        , View.Utility.hideIf model.showEditor Button.closeEditor
+        , View.Utility.showIf model.showEditor Button.closeEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
 
