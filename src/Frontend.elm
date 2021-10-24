@@ -178,7 +178,7 @@ update msg model =
         SignOut ->
             ( { model
                 | currentUser = Nothing
-                , currentDocument = Nothing
+                , currentDocument = Just Docs.notSignedIn
                 , documents = []
                 , message = "Signed out"
                 , inputSearchKey = ""
@@ -190,10 +190,10 @@ update msg model =
             )
 
         InputUsername str ->
-            ( model, Cmd.none )
+            ( { model | inputUsername = str }, Cmd.none )
 
         InputPassword str ->
-            ( model, Cmd.none )
+            ( { model | inputPassword = str }, Cmd.none )
 
         -- UI
         GotNewWindowDimensions w h ->

@@ -27,7 +27,8 @@ $$
   \\int_0^1 x^n dx = \\frac{1}{n+1}
 $$
 
-*Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.
+*Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.  But if you would like to
+set up an account, go for it.
 
 When you click on _New Document_, you will get two links.  The  first is private; you use it to  edit your document in the future.  Keep this safe!  There is no way to recover it. Documents are automatically saved while you edit
 

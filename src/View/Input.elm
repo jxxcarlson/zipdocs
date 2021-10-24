@@ -1,4 +1,9 @@
-module View.Input exposing (enterPrivateId, searchDocsInput)
+module View.Input exposing
+    ( enterPrivateId
+    , passwordInput
+    , searchDocsInput
+    , usernameInput
+    )
 
 import Element as E exposing (Element, px)
 import Element.Font as Font
@@ -34,3 +39,11 @@ passwordTemplate width_ default msg text =
 searchDocsInput : FrontendModel -> Element FrontendMsg
 searchDocsInput model =
     inputFieldTemplate E.fill "Filter/fetch (:me, :public, :h, ...)" InputSearchKey model.inputSearchKey
+
+
+usernameInput model =
+    inputFieldTemplate (E.px 120) "Username" InputUsername model.inputUsername
+
+
+passwordInput model =
+    passwordTemplate (E.px 120) "Password" InputPassword model.inputPassword

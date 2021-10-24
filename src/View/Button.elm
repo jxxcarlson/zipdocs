@@ -12,6 +12,8 @@ module View.Button exposing
     , miniLaTeXLanguageButton
     , newDocument
     , printToPDF
+    , signIn
+    , signOut
     , startupHelp
     , toggleEditor
     )
@@ -76,6 +78,15 @@ toggleEditor model =
     buttonTemplate [ Background.color Color.darkBlue ] CloseEditor title
 
 
+signOut model =
+    case model.currentUser of
+        Nothing ->
+            E.none
+
+        Just user ->
+            buttonTemplate [] SignOut ("Sign out " ++ user.username)
+
+
 
 -- DOCUMENT
 
@@ -137,6 +148,11 @@ help =
 
 startupHelp =
     buttonTemplate [] (Help Config.startupHelpDocumentId) "Help"
+
+
+signIn : Element FrontendMsg
+signIn =
+    buttonTemplate [] SignIn "Sign in | Sign up"
 
 
 

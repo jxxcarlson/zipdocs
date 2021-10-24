@@ -129,6 +129,10 @@ header model width_ =
 
         -- , Button.l1LanguageButton model
         , wordCount model
+        , View.Utility.showIf (model.currentUser == Nothing) Button.signIn
+        , View.Utility.showIf (model.currentUser == Nothing) (View.Input.usernameInput model)
+        , View.Utility.showIf (model.currentUser == Nothing) (View.Input.passwordInput model)
+        , Button.signOut model
 
         -- , Button.help
         , E.el [ E.alignRight ] (title Config.appName)
