@@ -109,7 +109,7 @@ updateFromFrontend sessionId clientId msg model =
                     Dict.insert publicIdTokenData.token doc.id model.publicIdDict
 
                 message =
-                    "Author link: " ++ "https://" ++ Config.appName ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ "https://" ++ Config.appName ++ "/p/" ++ publicIdTokenData.token
+                    "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
             in
             ( { model | randomSeed = publicIdTokenData.seed, documentDict = documentDict, authorIdDict = authorIdDict, publicIdDict = publicIdDict }
             , Cmd.batch
@@ -144,7 +144,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ sendToFrontend clientId (SendDocument doc)
                                 , sendToFrontend clientId (SetShowEditor True)
-                                , sendToFrontend clientId (SendMessage ("public link: https://" ++ Config.appName ++ "/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage ("public link: " ++ Config.appUrl ++ "/p/" ++ doc.publicId))
                                 ]
                             )
 
@@ -195,7 +195,7 @@ statusReport model =
 
         items : List String
         items =
-            List.map (\( a, b ) -> a ++ ": " ++ b ++ " : " ++ gist b) pairs
+            List.map (\( a, b ) -> authorUrl a ++ " : " ++ b ++ " : " ++ gist b) pairs
 
         firstEntry : String
         firstEntry =
@@ -205,3 +205,23 @@ statusReport model =
             "Dictionary size: " ++ String.fromInt (List.length pairs)
     in
     firstEntry :: secondEntry :: items
+
+
+authorUrl : String -> String
+authorUrl authorId =
+    Config.appUrl ++ "/a/" ++ authorId
+
+
+authorLink : String -> String
+authorLink authorId =
+    "[Author](" ++ authorUrl authorId ++ ")"
+
+
+publicUrl : String -> String
+publicUrl publicId =
+    Config.appUrl ++ "/p/" ++ publicId
+
+
+publicLink : String -> String
+publicLink publicId =
+    "[Public](" ++ publicUrl publicId ++ ")"
