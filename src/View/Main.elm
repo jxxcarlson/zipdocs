@@ -8,6 +8,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
 import Markup.API
+import String.Extra
 import Types exposing (..)
 import View.Button as Button
 import View.Color as Color
@@ -108,7 +109,7 @@ viewMydocs model deltaH =
         ]
         (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
             :: viewDocsAsLinks model.currentDocument
-                (List.sortBy (\doc -> doc.title) model.documents)
+                (List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents)
         )
 
 
@@ -206,6 +207,7 @@ viewEditor_ model width_ =
             Input.multiline
                 [ E.height (E.px (panelHeight_ model))
                 , E.width (E.px width_)
+                , E.width (E.px width_)
                 , Font.size 14
                 , Background.color (E.rgb255 240 241 255)
                 ]
@@ -249,7 +251,24 @@ viewLinks model =
 
 viewLink : DocumentLink -> Element FrontendMsg
 viewLink docLink =
-    E.newTabLink [] { url = docLink.url, label = E.el [] (E.text docLink.label) }
+    E.newTabLink [] { url = docLink.url, label = E.el [] (E.text (softTruncate softTruncateLimit docLink.label)) }
+
+
+softTruncateLimit =
+    50
+
+
+softTruncate : Int -> String -> String
+softTruncate k str =
+    case String.Extra.softBreak 40 str of
+        [] ->
+            ""
+
+        str2 :: [] ->
+            str2
+
+        str2 :: rest ->
+            str2 ++ " ..."
 
 
 settings : Markup.API.Settings
@@ -312,7 +331,7 @@ smallPanelWidth ww =
 
 
 smallHeaderWidth ww =
-    smallAppWidth ww - innerGutter
+    smallAppWidth ww
 
 
 headerWidth ww =
@@ -320,11 +339,7 @@ headerWidth ww =
 
 
 indexWidth ww =
-    200
-
-
-
---  amp 150 200 ww
+    ramp 150 300 ww
 
 
 appWidth ww =
@@ -332,7 +347,7 @@ appWidth ww =
 
 
 smallAppWidth ww =
-    ramp 700 900 ww
+    ramp 700 1000 ww
 
 
 docListWidth =

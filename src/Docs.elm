@@ -20,8 +20,8 @@ welcomeText =
 [! title](Welcome to Zipdocs)
 
 
-_Use Zipdocs to effortlessly create documents in Markdown or MiniLaTeX.  A hassle-free, no-setup way to share small documents with
-mathematical notation and images (if you need them).  Export your work to LaTeX, or generate a PDF file so you can print it_
+_Use Zipdocs to effortlessly create documents in Markdown or MiniLaTeX.  A hassle-free, no-setup way to share short notes and articles, problem sets,
+ etc. Support for mathematical notation and images.  Export your work to LaTeX, or generate a PDF file._
 
 $$
   \\int_0^1 x^n dx = \\frac{1}{n+1}
@@ -30,11 +30,15 @@ $$
 *Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.  But if you would like to
 set up an account, go for it. (There are some advantages: you don't have to keep track of document links).
 
-When you click on _New Document_, you will get two links.  The  first is private; you use it to  edit your document in the future.  Keep this safe!  There is no way to recover it. Documents are automatically saved while you edit
+When you click on _New Document_, you will get two links.  The  first is private;
+use it to  edit your document in the future.  If you are using the no-login option, keep this safe!
+There is no way to recover it.
 
 The second link is a public one that you can share with colleagues and
 friends.  With it anyone can read your document but not
 edit it.  Look in the footer of the app for the links.
+
+Documents are automatically saved as you edit
 
 
 [Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/cc265-li129)
