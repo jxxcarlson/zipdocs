@@ -37,7 +37,7 @@ friends.  With it anyone can read your document but not
 edit it.  Look in the footer of the app for the links.
 
 
-[Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/jn209-fd070)
+[Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/cc265-li129)
 
 ![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
 """
