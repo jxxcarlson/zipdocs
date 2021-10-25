@@ -50,9 +50,9 @@ viewEditorAndRenderedText model =
         [ E.column [ E.spacing 12, E.centerX, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
             [ header model (E.px <| appWidth model.windowWidth)
             , E.row [ E.spacing 12 ]
-                [ viewMydocs model 110
-                , viewEditor model (panelWidth_ model.windowWidth)
+                [ viewEditor model (panelWidth_ model.windowWidth)
                 , viewRendered model (panelWidth_ model.windowWidth)
+                , viewMydocs model 110
                 ]
             , footer model (appWidth model.windowWidth)
             ]
@@ -143,8 +143,9 @@ footer model width_ =
         [ Button.exportToLaTeX
         , Button.printToPDF model
         , View.Utility.showIf (isAdmin model) Button.runSpecial
-        , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
-        , messageRow model (width_ - messageRowInset model)
+
+        -- , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
+        , messageRow model (width_ - 10)
         ]
 
 

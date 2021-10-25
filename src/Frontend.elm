@@ -186,6 +186,7 @@ update msg model =
                 , inputSearchKey = ""
                 , inputUsername = ""
                 , inputPassword = ""
+                , showEditor = False
               }
             , -- Cmd.none
               Nav.pushUrl model.key "/"
