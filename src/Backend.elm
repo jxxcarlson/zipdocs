@@ -165,7 +165,7 @@ updateFromFrontend sessionId clientId msg model =
             }
                 |> Cmd.Extra.withCmds
                     [ sendToFrontend clientId (SendDocument doc)
-                    , sendToFrontend clientId (SendMessage ("DICT " ++ (model.usersDocumentsDict |> Debug.toString)))
+                    , sendToFrontend clientId (SendMessage message)
                     ]
 
         SaveDocument currentUser document ->
