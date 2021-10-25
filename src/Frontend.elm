@@ -217,7 +217,7 @@ update msg model =
             ( model, Cmd.none )
 
         CloseEditor ->
-            ( { model | showEditor = False }, Cmd.none )
+            ( { model | showEditor = False }, sendToBackend GetLinks )
 
         OpenEditor ->
             ( { model | showEditor = True }, Cmd.none )
