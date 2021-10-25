@@ -259,7 +259,11 @@ makeLink docId documentDict abstractDict =
             Nothing
 
         ( Just doc, Just abstr ) ->
-            Just { label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
+            if doc.public then
+                Just { label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
+
+            else
+                Nothing
 
 
 statusReport : Model -> List String
