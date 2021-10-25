@@ -47,7 +47,7 @@ usernameInput model =
 
 
 specialInput model =
-    inputFieldTemplate (E.px 120) "Specia" InputSpecial model.inputSpecial
+    inputFieldTemplate (E.px 120) "Special" InputSpecial model.inputSpecial
 
 
 passwordInput model =

@@ -144,8 +144,21 @@ footer model width_ =
         , Button.printToPDF model
         , View.Utility.showIf (isAdmin model) Button.runSpecial
         , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
-        , messageRow model (width_ - 10)
+        , messageRow model (width_ - messageRowInset model)
         ]
+
+
+messageRowInset model =
+    case model.currentUser of
+        Nothing ->
+            10
+
+        Just user ->
+            if user.username == "jxxcarlson" then
+                260
+
+            else
+                10
 
 
 isAdmin : Model -> Bool
