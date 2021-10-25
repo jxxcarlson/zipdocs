@@ -4,6 +4,7 @@ module Config exposing
     , helpDocumentId
     , pdfServer
     , startupHelpDocumentId
+    , transitKey
     )
 
 
@@ -25,3 +26,8 @@ startupHelpDocumentId =
 
 helpDocumentId =
     "yr248.qb459"
+
+
+
+transitKey =
+    "1f0d8b16-9689-4310-829d-7e0e86abe325"

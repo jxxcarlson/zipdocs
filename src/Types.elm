@@ -111,6 +111,7 @@ type FrontendMsg
     | SetViewPortForElement (Result Dom.Error ( Dom.Element, Dom.Viewport ))
     | ChangePopupStatus PopupStatus
     | CloseEditor
+    | OpenEditor
       -- USER
     | SignIn
     | SignOut

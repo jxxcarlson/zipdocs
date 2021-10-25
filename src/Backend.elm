@@ -117,12 +117,16 @@ updateFromFrontend sessionId clientId msg model =
                 publicIdTokenData =
                     Token.get authorIdTokenData.seed
 
+                title =
+                    Abstract.getItem doc_.language "title" doc_.content
+
                 doc =
                     { doc_
                         | id = idTokenData.token
                         , publicId = publicIdTokenData.token
                         , created = model.currentTime
                         , modified = model.currentTime
+                        , title = title
                     }
 
                 documentDict =
@@ -152,11 +156,10 @@ updateFromFrontend sessionId clientId msg model =
 
         SaveDocument currentUser document ->
             let
-                title =
-                    Abstract.getItem document.language "title" document.content
-
+                -- title =
+                --    Abstract.getItem document.language "title" document.content
                 documentDict =
-                    Dict.insert document.id { document | title = title } model.documentDict
+                    Dict.insert document.id document model.documentDict
             in
             ( { model | documentDict = documentDict }, Cmd.none )
 

@@ -13,7 +13,7 @@ import View.Button as Button
 import View.Color as Color
 import View.Input
 import View.Style
-import View.Utility
+import View.Utility exposing (hideIf, showIf)
 
 
 type alias Model =
@@ -41,64 +41,90 @@ mainColumn model =
 
 viewStatusReport model =
     E.column (mainColumnStyle model)
-        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
-            [ header model (E.px <| smallAppWidth model)
-            , E.column [ E.spacing 8, E.paddingXY 12 12, Font.size 14, Background.color (E.rgb 1 1 1), E.width (E.px (smallAppWidth model)) ]
+        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| smallAppWidth model.windowWidth)
+            , E.column [ E.spacing 8, E.paddingXY 12 12, Font.size 14, Background.color (E.rgb 1 1 1), E.width (E.px (smallAppWidth model.windowWidth)) ]
                 (List.map (\item -> E.el [] (E.text item)) model.statusReport)
-            , footer model (smallAppWidth model)
+            , footer model (smallAppWidth model.windowWidth)
 
             --, footer model 400
             ]
         ]
+
+
+
+-- TOP
 
 
 viewEditorAndRenderedText : Model -> Element FrontendMsg
 viewEditorAndRenderedText model =
     E.column (mainColumnStyle model)
-        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| appWidth model), E.height (E.px (appHeight_ model)) ]
-            [ header model (E.px <| (appWidth model - 30))
+        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| headerWidth model.windowWidth)
             , E.column [ E.spacing 12 ]
                 [ E.row [ E.spacing 12 ]
-                    [ viewEditor model (panelWidth_ model)
-                    , viewRendered model (panelWidth_ model)
+                    [ viewMydocs model 110
+                    , viewEditor model (panelWidth_ model.windowWidth)
+                    , viewRendered model (panelWidth_ model.windowWidth)
                     ]
                 ]
-            , footer model (appWidth model - 30)
+            , footer model (headerWidth model.windowWidth)
             ]
         ]
+
+
+
+-- MIDDLE
 
 
 viewRenderedTextOnly : Model -> Element FrontendMsg
 viewRenderedTextOnly model =
-    E.column (mainColumnStyle model)
-        [ E.column [ E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
-            [ header model (E.px <| smallAppWidth model)
-            , E.row [ E.spacing 12 ]
-                [ E.column [ E.spacing 18 ]
-                    [ viewRendered model (smallAppWidth model + 20)
-                    ]
-                , viewZipdocs model
-                , viewMydocs model
-                ]
-            , footer model (smallAppWidth model)
+    let
+        deltaH =
+            case model.currentUser of
+                Nothing ->
+                    110
 
-            --, footer model 400
+                Just _ ->
+                    (appHeight_ model - 100) // 2 + 110
+    in
+    E.column (mainColumnStyle model)
+        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| smallHeaderWidth model.windowWidth)
+            , E.row [ E.spacing 12 ]
+                [ viewRenderedContainer model
+                , E.column [ E.spacing 8 ]
+                    [ hideIf (model.currentUser == Nothing) (viewMydocs model deltaH)
+                    , viewZipdocs model deltaH
+                    ]
+                ]
+            , footer model (smallHeaderWidth model.windowWidth)
             ]
         ]
 
 
-viewMydocs : Model -> Element FrontendMsg
-viewMydocs model =
+viewRenderedContainer model =
+    E.column [ E.spacing 18 ]
+        [ viewRendered model (smallPanelWidth model.windowWidth)
+        ]
+
+
+viewMydocs : Model -> Int -> Element FrontendMsg
+viewMydocs model deltaH =
     E.column
-        [ E.width (E.px 300)
-        , E.height (E.px (appHeight_ model - 110))
+        [ E.width (E.px <| indexWidth model.windowWidth)
+        , E.height (E.px (appHeight_ model - deltaH))
         , Font.size 14
+        , E.scrollbarY
         , Background.color (E.rgb 0.95 0.95 1.0)
         , E.paddingXY 12 18
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs") :: viewDocsAsLinks model.currentDocument model.documents)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
+            :: viewDocsAsLinks model.currentDocument
+                (List.sortBy (\doc -> doc.title) model.documents)
+        )
 
 
 viewDocsAsLinks : Maybe Document -> List Document -> List (Element FrontendMsg)
@@ -106,17 +132,18 @@ viewDocsAsLinks currentDocument docs =
     List.map (Button.setDocumentAsCurrent currentDocument) docs
 
 
-viewZipdocs model =
+viewZipdocs model deltaH =
     E.column
-        [ E.width (E.px 300)
-        , E.height (E.px (appHeight_ model - 110))
+        [ E.width (E.px <| indexWidth model.windowWidth)
+        , E.height (E.px (appHeight_ model - deltaH))
         , Font.size 14
+        , E.scrollbarY
         , Background.color (E.rgb 0.95 0.95 1.0)
         , E.paddingXY 12 18
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Links to Zipdocs") :: viewLinks model)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Zipdocs") :: viewLinks model)
 
 
 footer model width_ =
@@ -148,6 +175,7 @@ header model width_ =
     E.row [ E.spacing 12, E.width width_ ]
         [ Button.newDocument
         , View.Utility.showIf model.showEditor Button.closeEditor
+        , View.Utility.hideIf (model.currentUser == Nothing || model.showEditor) Button.openEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
 
@@ -216,14 +244,13 @@ viewRendered model width_ =
                 , View.Style.bgGray 1.0
                 , E.width (E.px width_)
                 , E.height (E.px (panelHeight_ model))
-                , E.centerX
                 , Font.size 14
                 , E.alignTop
                 , E.scrollbarY
                 , View.Utility.elementAttribute "id" "__RENDERED_TEXT__"
                 ]
                 [ View.Utility.katexCSS
-                , E.column [ E.spacing 18, E.width (E.px (panelWidth_ model - 60)) ]
+                , E.column [ E.spacing 18, E.width (E.px (width_ - 60)) ]
                     (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content))
 
                 --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
@@ -266,16 +293,48 @@ renderArgs model =
 -- DIMENSIONS
 
 
-panelWidth_ model =
-    (appWidth model // 2) - 20
+innerGutter =
+    12
 
 
-appWidth model =
-    ramp 700 1200 model.windowWidth
+outerGutter =
+    12
 
 
-smallAppWidth model =
-    ramp 400 700 model.windowWidth
+panelWidth_ ww =
+    (appWidth ww - indexWidth ww - 100) // 2 - innerGutter - outerGutter
+
+
+
+-- THERE
+
+
+smallPanelWidth ww =
+    smallAppWidth ww - indexWidth ww - innerGutter
+
+
+smallHeaderWidth ww =
+    smallAppWidth ww - innerGutter
+
+
+headerWidth ww =
+    appWidth ww - 2 * innerGutter
+
+
+indexWidth ww =
+    200
+
+
+
+--  amp 150 200 ww
+
+
+appWidth ww =
+    ramp 700 1400 ww
+
+
+smallAppWidth ww =
+    ramp 700 900 ww
 
 
 docListWidth =

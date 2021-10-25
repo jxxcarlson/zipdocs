@@ -12,7 +12,7 @@ import Config
 import Credentials exposing (Credentials)
 import Crypto.HMAC exposing (sha256)
 import Dict exposing (Dict)
-import Env
+import Config
 import User exposing (User)
 
 
@@ -59,7 +59,7 @@ insert user salt transitPassword authDict =
 
 encryptForTransit : String -> String
 encryptForTransit str =
-    Crypto.HMAC.digest sha256 Env.transitKey str
+    Crypto.HMAC.digest sha256 Config.transitKey str
 
 
 verify : String -> String -> AuthenticationDict -> Bool

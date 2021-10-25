@@ -219,6 +219,9 @@ update msg model =
         CloseEditor ->
             ( { model | showEditor = False }, Cmd.none )
 
+        OpenEditor ->
+            ( { model | showEditor = True }, Cmd.none )
+
         Help docId ->
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
 
@@ -237,10 +240,17 @@ update msg model =
                             Markup.API.getTitle parseData.ast |> Maybe.withDefault "Untitled"
 
                         newDocument =
-                            { doc | content = str }
+                            { doc | content = str, title = newTitle }
+
+                        documents =
+                            List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
                     in
-                    ( { model | currentDocument = Just newDocument, counter = model.counter + 1 }
-                    , sendToBackend (SaveDocument model.currentUser doc)
+                    ( { model
+                        | currentDocument = Just newDocument
+                        , counter = model.counter + 1
+                        , documents = documents
+                      }
+                    , sendToBackend (SaveDocument model.currentUser newDocument)
                     )
 
         InputAuthorId str ->

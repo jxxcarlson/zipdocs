@@ -1,16 +1,10 @@
-module Env exposing (transitKey)
-
--- The Env.elm file is for per-environment configuration.
--- See https://dashboard.lamdera.app/docs/environment for more info.
+module Env exposing (..)
 
 
-dummyConfigItem =
-    ""
+type Mode
+    = Development
+    | Production
 
 
-transitKey =
-    "1f0d8b16-9689-4310-829d-7e0e86abe325"
-
-
-backendAuthKey =
-    "Crows are really smart birds!"
+mode =
+    Development
