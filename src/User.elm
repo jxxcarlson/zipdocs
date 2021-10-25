@@ -1,4 +1,4 @@
-module User exposing (User)
+module User exposing (..)
 
 import Time
 

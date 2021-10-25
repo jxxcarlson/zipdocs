@@ -30,11 +30,11 @@ $$
 *Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.  But if you would like to
 set up an account, go for it. (There are some advantages: you don't have to keep track of document links).
 
-When you click on _New Document_, you will get two links.  The  first is private;
-use it to  edit your document in the future.  If you are using the no-login option, keep this safe!
+When you click on _New Document_, you will get two links, which you will find in the footer of this app. The  first is private;
+use it to  edit your document in the future.  If you are using the no-login option, keep this link safe!
 There is no way to recover it.
 
-The second link is a public one that you can share with colleagues and
+The second link is to share with colleagues and
 friends.  With it anyone can read your document but not
 edit it.  Look in the footer of the app for the links.
 

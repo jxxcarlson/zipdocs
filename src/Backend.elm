@@ -125,21 +125,33 @@ updateFromFrontend sessionId clientId msg model =
 
                 doc =
                     { doc_
-                        | id = idTokenData.token
-                        , publicId = publicIdTokenData.token
+                        | id = "id-" ++ idTokenData.token
+                        , publicId = "pu-" ++ publicIdTokenData.token
                         , created = model.currentTime
                         , modified = model.currentTime
                         , title = title
                     }
 
                 documentDict =
-                    Dict.insert idTokenData.token doc model.documentDict
+                    Dict.insert ("id-" ++ idTokenData.token) doc model.documentDict
 
                 authorIdDict =
-                    Dict.insert authorIdTokenData.token doc.id model.authorIdDict
+                    Dict.insert ("au-" ++ authorIdTokenData.token) doc.id model.authorIdDict
 
                 publicIdDict =
-                    Dict.insert publicIdTokenData.token doc.id model.publicIdDict
+                    Dict.insert ("pu-" ++ publicIdTokenData.token) doc.id model.publicIdDict
+
+                usersDocumentsDict =
+                    case maybeCurrentUser of
+                        Nothing ->
+                            model.usersDocumentsDict
+
+                        Just user ->
+                            let
+                                oldIdList =
+                                    Dict.get user.id model.usersDocumentsDict |> Maybe.withDefault []
+                            in
+                            Dict.insert user.id (doc.id :: oldIdList) model.usersDocumentsDict
 
                 message =
                     "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
@@ -149,11 +161,11 @@ updateFromFrontend sessionId clientId msg model =
                 , documentDict = documentDict
                 , authorIdDict = authorIdDict
                 , publicIdDict = publicIdDict
+                , usersDocumentsDict = usersDocumentsDict
             }
-                |> postDocumentToCurrentUser maybeCurrentUser doc
                 |> Cmd.Extra.withCmds
                     [ sendToFrontend clientId (SendDocument doc)
-                    , sendToFrontend clientId (SendMessage message)
+                    , sendToFrontend clientId (SendMessage ("DICT " ++ (model.usersDocumentsDict |> Debug.toString)))
                     ]
 
         SaveDocument currentUser document ->

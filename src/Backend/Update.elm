@@ -71,10 +71,10 @@ setupUser model clientId username transitPassword =
     in
     case Authentication.insert user randomHex transitPassword model.authenticationDict of
         Err str ->
-            ( { model | randomSeed = seed }, sendToFrontend clientId (SendMessage ("Error: " ++ str)) )
+            ( { model | randomSeed = tokenData.seed }, sendToFrontend clientId (SendMessage ("Error: " ++ str)) )
 
         Ok authDict ->
-            ( { model | randomSeed = seed, authenticationDict = authDict }
+            ( { model | randomSeed = tokenData.seed, authenticationDict = authDict, usersDocumentsDict = Dict.insert user.id [] model.usersDocumentsDict }
             , Cmd.batch
                 [ sendToFrontend clientId (SendMessage "Success! You have set up your account")
                 , sendToFrontend clientId (SendUser user)
@@ -89,8 +89,4 @@ getUserDocuments user usersDocumentsDict documentDict =
             []
 
         Just docIds ->
-            []
-
-
-
---   List.map (\id -> Dict.get id documentDict) docIds |> Maybe.Extra.values
+            List.foldl (\id acc -> Dict.get id documentDict :: acc) [] docIds |> Maybe.Extra.values

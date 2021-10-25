@@ -35,13 +35,13 @@ newDocument model =
         title =
             case model.language of
                 Lang.Lang.L1 ->
-                    "[title New Document]"
+                    "[title New Document]\n\n"
 
                 Lang.Lang.Markdown ->
-                    "[! title](New Document)"
+                    "[! title](New Document)\n\n"
 
                 Lang.Lang.MiniLaTeX ->
-                    "\\title{New Document}"
+                    "\\title{New Document}\n\n"
 
         doc =
             { emptyDoc
