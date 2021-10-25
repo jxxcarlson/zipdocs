@@ -49,7 +49,7 @@ newDocument model =
                 , language = model.language
             }
     in
-    ( { model | showEditor = True }, sendToBackend (CreateDocument doc) )
+    ( { model | showEditor = True }, sendToBackend (CreateDocument model.currentUser doc) )
 
 
 updateCurrentDocument : Document -> FrontendModel -> FrontendModel

@@ -17,6 +17,7 @@ type alias Document =
     , modified : Time.Posix
     , content : String
     , language : Lang.Lang.Lang
+    , title : String
     }
 
 
@@ -37,6 +38,7 @@ empty =
     , modified = Time.millisToPosix 0
     , content = ""
     , language = Lang.Lang.Markdown
+    , title = "(Untitled)"
     }
 
 

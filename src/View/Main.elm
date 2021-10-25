@@ -71,28 +71,52 @@ viewEditorAndRenderedText model =
 viewRenderedTextOnly : Model -> Element FrontendMsg
 viewRenderedTextOnly model =
     E.column (mainColumnStyle model)
-        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
+        [ E.column [ E.spacing 12, E.width (E.px <| smallAppWidth model), E.height (E.px (appHeight_ model)) ]
             [ header model (E.px <| smallAppWidth model)
             , E.row [ E.spacing 12 ]
                 [ E.column [ E.spacing 18 ]
                     [ viewRendered model (smallAppWidth model + 20)
                     ]
-                , E.column
-                    [ E.width (E.px 300)
-                    , E.height (E.px (appHeight_ model - 110))
-                    , Font.size 14
-                    , Background.color (E.rgb 0.95 0.95 1.0)
-                    , E.paddingXY 12 18
-                    , Font.color (E.rgb 0.1 0.1 1.0)
-                    , E.spacing 8
-                    ]
-                    (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Links to Zipdocs") :: viewLinks model)
+                , viewZipdocs model
+                , viewMydocs model
                 ]
             , footer model (smallAppWidth model)
 
             --, footer model 400
             ]
         ]
+
+
+viewMydocs : Model -> Element FrontendMsg
+viewMydocs model =
+    E.column
+        [ E.width (E.px 300)
+        , E.height (E.px (appHeight_ model - 110))
+        , Font.size 14
+        , Background.color (E.rgb 0.95 0.95 1.0)
+        , E.paddingXY 12 18
+        , Font.color (E.rgb 0.1 0.1 1.0)
+        , E.spacing 8
+        ]
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs") :: viewDocsAsLinks model.currentDocument model.documents)
+
+
+viewDocsAsLinks : Maybe Document -> List Document -> List (Element FrontendMsg)
+viewDocsAsLinks currentDocument docs =
+    List.map (Button.setDocumentAsCurrent currentDocument) docs
+
+
+viewZipdocs model =
+    E.column
+        [ E.width (E.px 300)
+        , E.height (E.px (appHeight_ model - 110))
+        , Font.size 14
+        , Background.color (E.rgb 0.95 0.95 1.0)
+        , E.paddingXY 12 18
+        , Font.color (E.rgb 0.1 0.1 1.0)
+        , E.spacing 8
+        ]
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Links to Zipdocs") :: viewLinks model)
 
 
 footer model width_ =

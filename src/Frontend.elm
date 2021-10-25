@@ -240,7 +240,7 @@ update msg model =
                             { doc | content = str }
                     in
                     ( { model | currentDocument = Just newDocument, counter = model.counter + 1 }
-                    , sendToBackend (SaveDocument doc)
+                    , sendToBackend (SaveDocument model.currentUser doc)
                     )
 
         InputAuthorId str ->
@@ -257,6 +257,9 @@ update msg model =
 
         NewDocument ->
             Frontend.Update.newDocument model
+
+        SetDocumentAsCurrent doc ->
+            ( { model | currentDocument = Just doc }, Cmd.none )
 
         SetLanguage lang ->
             ( { model | language = lang }, Cmd.none )

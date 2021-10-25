@@ -1,6 +1,5 @@
-module Env exposing (..)
+module Env exposing (transitKey)
 
--- import Lamdera.Env
 -- The Env.elm file is for per-environment configuration.
 -- See https://dashboard.lamdera.app/docs/environment for more info.
 

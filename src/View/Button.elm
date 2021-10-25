@@ -12,6 +12,7 @@ module View.Button exposing
     , miniLaTeXLanguageButton
     , newDocument
     , printToPDF
+    , setDocumentAsCurrent
     , signIn
     , signOut
     , startupHelp
@@ -198,3 +199,23 @@ miniLaTeXLanguageButton model =
                 Background.color (E.rgb255 40 40 40)
     in
     buttonTemplate [ bg ] (SetLanguage Lang.Lang.MiniLaTeX) "MiniLaTeX"
+
+
+setDocumentAsCurrent : Maybe Document.Document -> Document.Document -> Element FrontendMsg
+setDocumentAsCurrent currentDocument document =
+    let
+        fg =
+            if currentDocument == Just document then
+                Font.color (E.rgb 0.7 0 0)
+
+            else
+                Font.color (E.rgb 0 0 0.8)
+    in
+    Input.button View.Style.buttonStyle
+        { onPress = Just (SetDocumentAsCurrent document)
+        , label = E.el [ E.centerX, E.centerY, Font.size 14, fg ] (E.text document.title)
+        }
+
+
+
+--  buttonTemplate [ Font.size 14, fg, Background.color (E.rgb 0.3 0.3 0.3) ] (SetDocumentAsCurrent document) document.title

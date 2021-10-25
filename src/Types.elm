@@ -121,6 +121,7 @@ type FrontendMsg
     | InputSearchKey String
     | InputAuthorId String
     | NewDocument
+    | SetDocumentAsCurrent Document
     | SetLanguage Lang.Lang.Lang
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
@@ -156,10 +157,10 @@ type ToBackend
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
-    | SaveDocument Document
+    | SaveDocument (Maybe User) Document
     | GetDocumentByAuthorId String
     | GetDocumentByPublicId String
-    | CreateDocument Document
+    | CreateDocument (Maybe User) Document
     | GetLinks
 
 

@@ -106,7 +106,7 @@ updateFromFrontend sessionId clientId msg model =
                     Backend.Update.setupUser model clientId username encryptedPassword
 
         -- DOCUMENTS
-        CreateDocument doc_ ->
+        CreateDocument maybeCurrentUser doc_ ->
             let
                 idTokenData =
                     Token.get model.randomSeed
@@ -137,17 +137,26 @@ updateFromFrontend sessionId clientId msg model =
                 message =
                     "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
             in
-            ( { model | randomSeed = publicIdTokenData.seed, documentDict = documentDict, authorIdDict = authorIdDict, publicIdDict = publicIdDict }
+            ( { model
+                | randomSeed = publicIdTokenData.seed
+                , documentDict = documentDict
+                , authorIdDict = authorIdDict
+                , publicIdDict = publicIdDict
+              }
+                |> postDocumentToCurrentUser maybeCurrentUser doc
             , Cmd.batch
                 [ sendToFrontend clientId (SendDocument doc)
                 , sendToFrontend clientId (SendMessage message)
                 ]
             )
 
-        SaveDocument document ->
+        SaveDocument currentUser document ->
             let
+                title =
+                    Abstract.getItem document.language "title" document.content
+
                 documentDict =
-                    Dict.insert document.id document model.documentDict
+                    Dict.insert document.id { document | title = title } model.documentDict
             in
             ( { model | documentDict = documentDict }, Cmd.none )
 
@@ -204,6 +213,22 @@ sendDoc model clientId path =
                 [ sendToFrontend clientId (SendDocument doc)
                 ]
             )
+
+
+postDocumentToCurrentUser maybeCurrentUser doc model =
+    case maybeCurrentUser of
+        Nothing ->
+            model
+
+        Just user ->
+            let
+                newUser =
+                    { user | docIds = doc.id :: user.docIds }
+
+                newAuthDict =
+                    Authentication.updateUser newUser model.authenticationDict
+            in
+            { model | authenticationDict = newAuthDict }
 
 
 makeLinks : Model -> Model

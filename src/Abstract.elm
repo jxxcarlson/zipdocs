@@ -1,4 +1,4 @@
-module Abstract exposing (Abstract, empty, get, getDigest, getNormalizedAbstract, toString)
+module Abstract exposing (Abstract, empty, get, getDigest, getItem, getNormalizedAbstract, toString)
 
 import Lang.Lang as Lang
 import Parser exposing ((|.), (|=), Parser)
