@@ -28,7 +28,7 @@ $$
 $$
 
 *Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.  But if you would like to
-set up an account, go for it.
+set up an account, go for it. (There are some advantages: you don't have to keep track of document links).
 
 When you click on _New Document_, you will get two links.  The  first is private; you use it to  edit your document in the future.  Keep this safe!  There is no way to recover it. Documents are automatically saved while you edit
 
