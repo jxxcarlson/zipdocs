@@ -17,6 +17,7 @@ welcomeText =
 
 
 
+
 [! title](Welcome to Zipdocs)
 
 
@@ -41,7 +42,7 @@ edit it.  Look in the footer of the app for the links.
 Documents are automatically saved as you edit
 
 
-[Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/cp389-gs210)
+[Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/cp389-gs210)  • [About MiniLaTeX](https://zipdocs.lamdera.app/p/bn493-tt086)
 
 ![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
 """
