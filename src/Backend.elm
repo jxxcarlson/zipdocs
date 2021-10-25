@@ -182,7 +182,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ sendToFrontend clientId (SendDocument doc)
                                 , sendToFrontend clientId (SetShowEditor True)
-                                , sendToFrontend clientId (SendMessage ("public link: " ++ Config.appUrl ++ "/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId))
                                 ]
                             )
 
@@ -197,7 +197,13 @@ updateFromFrontend sessionId clientId msg model =
                             ( model, sendToFrontend clientId (SendMessage "No document for that docId") )
 
                         Just doc ->
-                            ( model, Cmd.batch [ sendToFrontend clientId (SendDocument doc), sendToFrontend clientId (SetShowEditor False) ] )
+                            ( model
+                            , Cmd.batch
+                                [ sendToFrontend clientId (SendDocument doc)
+                                , sendToFrontend clientId (SetShowEditor False)
+                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId))
+                                ]
+                            )
 
         GetLinks ->
             ( model, sendToFrontend clientId (GotLinks model.links) )
