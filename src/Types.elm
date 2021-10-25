@@ -23,6 +23,7 @@ type alias FrontendModel =
 
     -- ADMIN
     , statusReport : List String
+    , inputSpecial : String
 
     -- USER
     , currentUser : Maybe User
@@ -112,6 +113,9 @@ type FrontendMsg
     | ChangePopupStatus PopupStatus
     | CloseEditor
     | OpenEditor
+      -- ADMIN
+    | InputSpecial String
+    | RunSpecial
       -- USER
     | SignIn
     | SignOut
@@ -164,6 +168,7 @@ type ToBackend
     | GetDocumentByPublicId String
     | CreateDocument (Maybe User) Document
     | GetLinks
+    | StealDocument User String
 
 
 type BackendMsg

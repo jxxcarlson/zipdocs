@@ -142,8 +142,15 @@ footer model width_ =
         ]
         [ Button.exportToLaTeX
         , Button.printToPDF model
+        , View.Utility.showIf (isAdmin model) Button.runSpecial
+        , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
         , messageRow model (width_ - 10)
         ]
+
+
+isAdmin : Model -> Bool
+isAdmin model =
+    Maybe.map .username model.currentUser == Just "jxxcarlson"
 
 
 messageRow model width_ =

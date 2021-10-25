@@ -4,6 +4,7 @@ import Authentication
 import Browser exposing (UrlRequest(..))
 import Browser.Events
 import Browser.Navigation as Nav
+import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Config
 import Data
 import Docs
@@ -59,6 +60,7 @@ init url key =
 
       -- ADMIN
       , statusReport = []
+      , inputSpecial = ""
 
       -- USER
       , currentUser = Nothing
@@ -188,6 +190,22 @@ update msg model =
             , -- Cmd.none
               Nav.pushUrl model.key "/"
             )
+
+        -- ADMIN
+        InputSpecial str ->
+            { model | inputSpecial = str } |> withNoCmd
+
+        RunSpecial ->
+            case model.currentUser of
+                Nothing ->
+                    model |> withNoCmd
+
+                Just user ->
+                    if user.username == "jxxcarlson" then
+                        model |> withCmd (sendToBackend (StealDocument user model.inputSpecial))
+
+                    else
+                        model |> withNoCmd
 
         InputUsername str ->
             ( { model | inputUsername = str }, Cmd.none )

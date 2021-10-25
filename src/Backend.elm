@@ -4,6 +4,7 @@ import Abstract exposing (Abstract)
 import Authentication
 import Backend.Cmd
 import Backend.Update
+import Cmd.Extra
 import Config
 import Data
 import Dict exposing (Dict)
@@ -16,6 +17,7 @@ import Random
 import Time
 import Token
 import Types exposing (..)
+import User exposing (User)
 
 
 type alias Model =
@@ -71,7 +73,7 @@ update msg model =
             Backend.Update.gotAtmosphericRandomNumber model result
 
         Tick newTime ->
-            ( { model | currentTime = newTime } |> updateAbstracts |> makeLinks, Cmd.none )
+            { model | currentTime = newTime } |> updateAbstracts |> makeLinks |> Cmd.Extra.withNoCmd
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -141,18 +143,17 @@ updateFromFrontend sessionId clientId msg model =
                 message =
                     "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
             in
-            ( { model
+            { model
                 | randomSeed = publicIdTokenData.seed
                 , documentDict = documentDict
                 , authorIdDict = authorIdDict
                 , publicIdDict = publicIdDict
-              }
+            }
                 |> postDocumentToCurrentUser maybeCurrentUser doc
-            , Cmd.batch
-                [ sendToFrontend clientId (SendDocument doc)
-                , sendToFrontend clientId (SendMessage message)
-                ]
-            )
+                |> Cmd.Extra.withCmds
+                    [ sendToFrontend clientId (SendDocument doc)
+                    , sendToFrontend clientId (SendMessage message)
+                    ]
 
         SaveDocument currentUser document ->
             let
@@ -207,6 +208,9 @@ updateFromFrontend sessionId clientId msg model =
 
         GetLinks ->
             ( model, sendToFrontend clientId (GotLinks model.links) )
+
+        StealDocument user id ->
+            stealId user id model |> Cmd.Extra.withNoCmd
 
 
 sendDoc model clientId path =
@@ -330,6 +334,23 @@ updateAbstracts model =
             List.foldl (\id runningAbstractDict -> putAbstract id model.documentDict runningAbstractDict) model.abstractDict ids
     in
     { model | abstractDict = abstractDict }
+
+
+stealId : User -> String -> Model -> Model
+stealId user id model =
+    case Dict.get id model.documentDict of
+        Nothing ->
+            model
+
+        Just _ ->
+            let
+                newUser =
+                    { user | docIds = id :: user.docIds }
+
+                newAuthDict =
+                    Authentication.updateUser newUser model.authenticationDict
+            in
+            { model | authenticationDict = newAuthDict }
 
 
 putAbstract : String -> DocumentDict -> AbstractDict -> AbstractDict

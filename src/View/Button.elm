@@ -13,6 +13,7 @@ module View.Button exposing
     , newDocument
     , openEditor
     , printToPDF
+    , runSpecial
     , setDocumentAsCurrent
     , signIn
     , signOut
@@ -148,6 +149,11 @@ closeEditor =
 openEditor : Element FrontendMsg
 openEditor =
     buttonTemplate [] OpenEditor "Open Editor"
+
+
+runSpecial : Element FrontendMsg
+runSpecial =
+    buttonTemplate [] RunSpecial "Run Special"
 
 
 help =

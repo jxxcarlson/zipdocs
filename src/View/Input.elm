@@ -2,6 +2,7 @@ module View.Input exposing
     ( enterPrivateId
     , passwordInput
     , searchDocsInput
+    , specialInput
     , usernameInput
     )
 
@@ -43,6 +44,10 @@ searchDocsInput model =
 
 usernameInput model =
     inputFieldTemplate (E.px 120) "Username" InputUsername model.inputUsername
+
+
+specialInput model =
+    inputFieldTemplate (E.px 120) "Specia" InputSpecial model.inputSpecial
 
 
 passwordInput model =
