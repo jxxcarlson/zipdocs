@@ -129,7 +129,7 @@ viewZipdocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Zipdocs") :: viewLinks model)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Published Zipdocs") :: viewLinks model)
 
 
 footer model width_ =
