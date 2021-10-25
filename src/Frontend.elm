@@ -269,7 +269,7 @@ update msg model =
             Frontend.Update.newDocument model
 
         SetDocumentAsCurrent doc ->
-            ( { model | currentDocument = Just doc }, Cmd.none )
+            ( { model | currentDocument = Just doc, message = Config.appUrl ++ "/p/" ++ doc.publicId }, Cmd.none )
 
         SetLanguage lang ->
             ( { model | language = lang }, Cmd.none )
