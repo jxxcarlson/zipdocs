@@ -51,6 +51,7 @@ init =
       , authorIdDict = Dict.empty
       , publicIdDict = Dict.empty
       , abstractDict = Dict.empty
+      , usersDocumentsDict = Dict.empty
       , links = []
 
       -- DOCUMENTS
@@ -96,7 +97,7 @@ updateFromFrontend sessionId clientId msg model =
                     if Authentication.verify username encryptedPassword model.authenticationDict then
                         ( model
                         , Cmd.batch
-                            [ sendToFrontend clientId (SendDocuments <| Backend.Update.getUserDocuments userData.user model.documentDict)
+                            [ sendToFrontend clientId (SendDocuments <| Backend.Update.getUserDocuments userData.user model.usersDocumentsDict model.documentDict)
                             , sendToFrontend clientId (SendUser userData.user)
                             ]
                         )
@@ -228,20 +229,19 @@ sendDoc model clientId path =
             )
 
 
+postDocumentToCurrentUser : Maybe User -> Document.Document -> Model -> Model
 postDocumentToCurrentUser maybeCurrentUser doc model =
     case maybeCurrentUser of
         Nothing ->
             model
 
         Just user ->
-            let
-                newUser =
-                    { user | docIds = doc.id :: user.docIds }
+            case Dict.get user.id model.usersDocumentsDict of
+                Nothing ->
+                    { model | usersDocumentsDict = Dict.insert user.id [ doc.id ] model.usersDocumentsDict }
 
-                newAuthDict =
-                    Authentication.updateUser newUser model.authenticationDict
-            in
-            { model | authenticationDict = newAuthDict }
+                Just docIdList ->
+                    { model | usersDocumentsDict = Dict.insert user.id (doc.id :: docIdList) model.usersDocumentsDict }
 
 
 makeLinks : Model -> Model
@@ -345,7 +345,7 @@ stealId user id model =
         Just _ ->
             let
                 newUser =
-                    { user | docIds = id :: user.docIds }
+                    user
 
                 newAuthDict =
                     Authentication.updateUser newUser model.authenticationDict

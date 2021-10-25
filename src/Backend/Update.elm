@@ -64,7 +64,6 @@ setupUser model clientId username transitPassword =
             { username = username
             , id = tokenData.token
             , realname = "Undefined"
-            , docIds = []
             , email = "Undefined"
             , created = model.currentTime
             , modified = model.currentTime
@@ -83,6 +82,15 @@ setupUser model clientId username transitPassword =
             )
 
 
-getUserDocuments : User -> DocumentDict -> List Document.Document
-getUserDocuments user documentDict =
-    List.map (\id -> Dict.get id documentDict) user.docIds |> Maybe.Extra.values
+getUserDocuments : User -> UsersDocumentsDict -> DocumentDict -> List Document.Document
+getUserDocuments user usersDocumentsDict documentDict =
+    case Dict.get user.id usersDocumentsDict of
+        Nothing ->
+            []
+
+        Just docIds ->
+            []
+
+
+
+--   List.map (\id -> Dict.get id documentDict) docIds |> Maybe.Extra.values

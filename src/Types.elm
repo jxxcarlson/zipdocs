@@ -73,8 +73,9 @@ type alias BackendModel =
     -- DATA
     , documentDict : DocumentDict
     , authorIdDict : AuthorDict
-    , publicIdDict : PublidIdDict
+    , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
+    , usersDocumentsDict : UsersDocumentsDict
     , links : List DocumentLink
 
     -- DOCUMENT
@@ -86,20 +87,51 @@ type alias DocumentLink =
     { label : String, url : String }
 
 
-type alias AbstractDict =
-    Dict String Abstract
+
+-- Entries for the first three dictionaries are created when a document
+-- is created.
 
 
+{-| author's doc id -> docId; enables author access to doc via a link
+-}
 type alias AuthorDict =
     Dict String String
 
 
-type alias PublidIdDict =
+{-| public's doc id -> docId; enables public access to doc via a link
+-}
+type alias PublicIdDict =
     Dict String String
 
 
+{-| docId -> Document
+-}
 type alias DocumentDict =
     Dict String Document
+
+
+{-| Document ids -> Document abstracts
+-}
+type alias UsersDocumentsDict =
+    Dict UserId (List DocId)
+
+
+
+-- The document abstract is updated every time a document is saved.
+
+
+{-| docId -> Document abstracts
+-}
+type alias AbstractDict =
+    Dict String Abstract
+
+
+type alias UserId =
+    String
+
+
+type alias DocId =
+    String
 
 
 type FrontendMsg

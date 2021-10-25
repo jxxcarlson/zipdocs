@@ -10,5 +10,4 @@ type alias User =
     , email : String
     , created : Time.Posix
     , modified : Time.Posix
-    , docIds : List String
     }
