@@ -39,19 +39,6 @@ mainColumn model =
         viewStatusReport model
 
 
-viewStatusReport model =
-    E.column (mainColumnStyle model)
-        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
-            [ header model (E.px <| smallAppWidth model.windowWidth)
-            , E.column [ E.spacing 8, E.paddingXY 12 12, Font.size 14, Background.color (E.rgb 1 1 1), E.width (E.px (smallAppWidth model.windowWidth)) ]
-                (List.map (\item -> E.el [] (E.text item)) model.statusReport)
-            , footer model (smallAppWidth model.windowWidth)
-
-            --, footer model 400
-            ]
-        ]
-
-
 
 -- TOP
 
@@ -59,16 +46,14 @@ viewStatusReport model =
 viewEditorAndRenderedText : Model -> Element FrontendMsg
 viewEditorAndRenderedText model =
     E.column (mainColumnStyle model)
-        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
-            [ header model (E.px <| headerWidth model.windowWidth)
-            , E.column [ E.spacing 12 ]
-                [ E.row [ E.spacing 12 ]
-                    [ viewMydocs model 110
-                    , viewEditor model (panelWidth_ model.windowWidth)
-                    , viewRendered model (panelWidth_ model.windowWidth)
-                    ]
+        [ E.column [ E.spacing 12, E.centerX, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| appWidth model.windowWidth)
+            , E.row [ E.spacing 12 ]
+                [ viewMydocs model 110
+                , viewEditor model (panelWidth_ model.windowWidth)
+                , viewRendered model (panelWidth_ model.windowWidth)
                 ]
-            , footer model (headerWidth model.windowWidth)
+            , footer model (appWidth model.windowWidth)
             ]
         ]
 
@@ -151,7 +136,7 @@ footer model width_ =
         [ E.spacing 12
         , E.paddingXY 0 8
         , E.height (E.px 25)
-        , E.width (E.px width_)
+        , E.width E.fill -- (E.px width_)
         , Font.size 14
         ]
         [ Button.exportToLaTeX
@@ -172,7 +157,7 @@ messageRow model width_ =
 
 
 header model width_ =
-    E.row [ E.spacing 12, E.width width_ ]
+    E.row [ E.spacing 12, E.width E.fill ]
         [ Button.newDocument
         , View.Utility.showIf model.showEditor Button.closeEditor
         , View.Utility.hideIf (model.currentUser == Nothing || model.showEditor) Button.openEditor
@@ -220,7 +205,7 @@ viewEditor_ model width_ =
         Just doc ->
             Input.multiline
                 [ E.height (E.px (panelHeight_ model))
-                , E.width (E.px width_)
+                , E.width E.fill -- (E.px width_)
                 , Font.size 14
                 , Background.color (E.rgb255 240 241 255)
                 ]
@@ -277,6 +262,19 @@ settings =
     }
 
 
+viewStatusReport model =
+    E.column (mainColumnStyle model)
+        [ E.column [ E.centerX, E.spacing 12, E.width (E.px <| smallAppWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| smallAppWidth model.windowWidth)
+            , E.column [ E.spacing 8, E.paddingXY 12 12, Font.size 14, Background.color (E.rgb 1 1 1), E.width (E.px (smallAppWidth model.windowWidth)) ]
+                (List.map (\item -> E.el [] (E.text item)) model.statusReport)
+            , footer model (smallAppWidth model.windowWidth)
+
+            --, footer model 400
+            ]
+        ]
+
+
 
 --compile : Language -> Int -> Settings -> List String -> List (Element msg)
 --compile language generation settings lines
@@ -302,11 +300,11 @@ outerGutter =
 
 
 panelWidth_ ww =
-    (appWidth ww - indexWidth ww - 100) // 2 - innerGutter - outerGutter
+    (appWidth ww - indexWidth ww) // 2 - innerGutter - outerGutter
 
 
 
--- THERE
+-- BOTTOM
 
 
 smallPanelWidth ww =
