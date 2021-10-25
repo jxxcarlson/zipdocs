@@ -202,7 +202,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ sendToFrontend clientId (SendDocument doc)
                                 , sendToFrontend clientId (SetShowEditor False)
-                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
                             )
 
