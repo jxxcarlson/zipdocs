@@ -205,7 +205,7 @@ viewEditor_ model width_ =
         Just doc ->
             Input.multiline
                 [ E.height (E.px (panelHeight_ model))
-                , E.width E.fill -- (E.px width_)
+                , E.width (E.px width_)
                 , Font.size 14
                 , Background.color (E.rgb255 240 241 255)
                 ]
