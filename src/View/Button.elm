@@ -1,6 +1,5 @@
 module View.Button exposing
     ( closeEditor
-    , openEditor
     , export
     , exportToLaTeX
     , exportToMarkown
@@ -12,12 +11,14 @@ module View.Button exposing
     , markupLanguageButton
     , miniLaTeXLanguageButton
     , newDocument
+    , openEditor
     , printToPDF
     , setDocumentAsCurrent
     , signIn
     , signOut
     , startupHelp
     , toggleEditor
+    , togglePublic
     )
 
 import Config
@@ -221,6 +222,21 @@ setDocumentAsCurrent currentDocument document =
         { onPress = Just (SetDocumentAsCurrent document)
         , label = E.el [ E.centerX, E.centerY, Font.size 14, fg ] (E.text document.title)
         }
+
+
+togglePublic : Maybe Document.Document -> Element FrontendMsg
+togglePublic maybeDoc =
+    case maybeDoc of
+        Nothing ->
+            E.none
+
+        Just doc ->
+            case doc.public of
+                False ->
+                    buttonTemplate [] (SetPublic doc True) "Private"
+
+                True ->
+                    buttonTemplate [] (SetPublic doc False) "Public"
 
 
 

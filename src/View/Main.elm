@@ -164,6 +164,7 @@ header model width_ =
         , View.Utility.hideIf (model.currentUser == Nothing || model.showEditor) Button.openEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
+        , View.Utility.showIf model.showEditor (Button.togglePublic model.currentDocument)
 
         -- , Button.l1LanguageButton model
         , wordCount model

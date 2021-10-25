@@ -124,6 +124,7 @@ type FrontendMsg
     | NewDocument
     | SetDocumentAsCurrent Document
     | SetLanguage Lang.Lang.Lang
+    | SetPublic Document Bool
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
     | ExportToMarkdown

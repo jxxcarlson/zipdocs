@@ -274,6 +274,16 @@ update msg model =
         SetLanguage lang ->
             ( { model | language = lang }, Cmd.none )
 
+        SetPublic doc public ->
+            let
+                newDocument =
+                    { doc | public = public }
+
+                documents =
+                    List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
+            in
+            ( { model | documents = documents, currentDocument = Just newDocument }, sendToBackend (SaveDocument model.currentUser newDocument) )
+
         ExportToMarkdown ->
             let
                 markdownText =
