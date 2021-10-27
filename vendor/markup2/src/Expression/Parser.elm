@@ -121,15 +121,26 @@ nextTokenState tokenState token =
         Lang.Token.Common.TSA ->
             case token of
                 Token.Symbol "[" _ ->
-                    Lang.Token.Common.TSB
+                    Lang.Token.Common.TSB 0
 
                 _ ->
                     tokenState
 
-        Lang.Token.Common.TSB ->
+        Lang.Token.Common.TSB k ->
             case token of
+                Token.Symbol "(" _ ->
+                    Lang.Token.Common.TSB (k + 1)
+
                 Token.Symbol ")" _ ->
-                    Lang.Token.Common.TSA
+                    let
+                        k_ =
+                            k - 1
+                    in
+                    if k_ == 0 then
+                        Lang.Token.Common.TSA
+
+                    else
+                        Lang.Token.Common.TSB k_
 
                 _ ->
                     tokenState
