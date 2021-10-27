@@ -223,10 +223,17 @@ setDocumentAsCurrent currentDocument document =
 
             else
                 Font.color (E.rgb 0 0 0.8)
+
+        style =
+            if document.public then
+                Font.italic
+
+            else
+                Font.unitalicized
     in
     Input.button []
         { onPress = Just (SetDocumentAsCurrent document)
-        , label = E.el [ E.centerX, E.centerY, Font.size 14, fg ] (E.text document.title)
+        , label = E.el [ E.centerX, E.centerY, Font.size 14, fg, style ] (E.text document.title)
         }
 
 
