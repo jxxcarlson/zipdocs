@@ -13,6 +13,7 @@ import Lang.Lang exposing (Lang(..))
 import Lang.Reduce.L1 as L1
 import Lang.Reduce.Markdown as Markdown
 import Lang.Reduce.MiniLaTeX as MiniLaTeX
+import Lang.Token.Common
 import List.Extra
 import Markup.Common exposing (Step(..), loop)
 import Markup.Debugger exposing (..)
@@ -56,6 +57,7 @@ init : String -> State
 init str =
     { sourceText = str
     , scanPointer = 0
+    , tokenState = Lang.Token.Common.TSA
     , end = String.length str
     , stack = []
     , committed = []
@@ -113,11 +115,41 @@ finalize lang state =
         recoverFromError lang state |> debugCyan "ReduceFinal (2, recoverFromErrors)"
 
 
+nextTokenState : Lang.Token.Common.TokenState -> Token -> Lang.Token.Common.TokenState
+nextTokenState tokenState token =
+    case tokenState of
+        Lang.Token.Common.TSA ->
+            case token of
+                Token.Symbol "[" _ ->
+                    Lang.Token.Common.TSB
+
+                _ ->
+                    tokenState
+
+        Lang.Token.Common.TSB ->
+            case token of
+                Token.Symbol ")" _ ->
+                    Lang.Token.Common.TSA
+
+                _ ->
+                    tokenState
+
+
 processToken : Lang -> State -> Step State State
 processToken lang state =
     let
-       token = Tokenizer.get lang state.scanPointer (String.dropLeft state.scanPointer state.sourceText) |> debugBlue ("Token: " ++ String.fromInt state.count)
-       _  = debugBlue ("Stack: " ++ String.fromInt (state.count - 1))  state.stack
+        token =
+            Tokenizer.get lang state.tokenState state.scanPointer (String.dropLeft state.scanPointer state.sourceText) |> debugBlue ("Token: " ++ String.fromInt state.count)
+
+        tokenState =
+            if lang == Markdown then
+                nextTokenState state.tokenState token
+
+            else
+                state.tokenState
+
+        _ =
+            debugBlue ("Stack: " ++ String.fromInt (state.count - 1)) state.stack
     in
     case token of
         TokenError errorData meta ->
@@ -138,10 +170,10 @@ processToken lang state =
                     String.length unprocessedText |> debugBlue "tokenLength"
             in
             -- Oops, exit
-            Loop { state | committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
+            Loop { state | tokenState = tokenState, committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
 
         newToken ->
-            Loop (shift newToken (reduce lang state)) |> debugRed "processToken, OUT"
+            Loop (shift newToken (reduce lang { state | tokenState = tokenState })) |> debugRed "processToken, OUT"
 
 
 errorValue : State -> ErrorData -> Expr
