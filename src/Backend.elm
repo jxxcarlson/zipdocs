@@ -171,7 +171,7 @@ updateFromFrontend sessionId clientId msg model =
         SaveDocument currentUser document ->
             let
                 --title =
-`                --   Ab`stract.getItem document.language "title" document.content
+                --   Ab`stract.getItem document.language "title" document.content
                 documentDict =
                     Dict.insert document.id document model.documentDict
             in
