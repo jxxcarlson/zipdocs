@@ -1,5 +1,6 @@
-module Backend.Update exposing (getUserDocuments, gotAtmosphericRandomNumber, setupUser)
+module Backend.Update exposing (getUserDocuments, gotAtmosphericRandomNumber, setupUser, updateAbstracts)
 
+import Abstract
 import Authentication
 import Dict
 import Document
@@ -90,3 +91,23 @@ getUserDocuments user usersDocumentsDict documentDict =
 
         Just docIds ->
             List.foldl (\id acc -> Dict.get id documentDict :: acc) [] docIds |> Maybe.Extra.values
+
+
+updateAbstract : Document.Document -> AbstractDict -> AbstractDict
+updateAbstract doc dict =
+    Dict.insert doc.id (Abstract.get doc.language doc.content) dict
+
+
+updateAbstractById : String -> DocumentDict -> AbstractDict -> AbstractDict
+updateAbstractById id docDict abstractDict =
+    case Dict.get id docDict of
+        Nothing ->
+            abstractDict
+
+        Just doc ->
+            updateAbstract doc abstractDict
+
+
+updateAbstracts : DocumentDict -> AbstractDict -> AbstractDict
+updateAbstracts documentDict abstractDict =
+    List.foldl (\id acc -> updateAbstractById id documentDict acc) abstractDict (Dict.keys documentDict)

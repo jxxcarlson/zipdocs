@@ -245,6 +245,9 @@ update msg model =
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
 
         -- DOCUMENT
+        Search ->
+            ( model, sendToBackend (SearchForDocuments model.inputSearchKey) )
+
         InputText str ->
             case model.currentDocument of
                 Nothing ->

@@ -173,6 +173,11 @@ signIn =
 -- USER
 
 
+search : Element FrontendMsg
+search =
+    buttonTemplate [] Search "Search"
+
+
 getDocument : Element FrontendMsg
 getDocument =
     buttonTemplate [] (AskFoDocumentById "aboutCYT") "Get document"

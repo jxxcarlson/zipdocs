@@ -87,6 +87,9 @@ updateFromFrontend sessionId clientId msg model =
         RunTask ->
             ( model, Cmd.none )
 
+        SearchForDocuments key ->
+            ( model, sendToFrontend clientId (SendDocuments (searchForDocuments key model)) )
+
         GetStatus ->
             ( model, sendToFrontend clientId (StatusReport (statusReport model)) )
 
@@ -345,7 +348,7 @@ updateAbstracts model =
         abstractDict =
             List.foldl (\id runningAbstractDict -> putAbstract id model.documentDict runningAbstractDict) model.abstractDict ids
     in
-    { model | abstractDict = abstractDict }
+    { model | abstractDict = Backend.Update.updateAbstracts model.documentDict model.abstractDict }
 
 
 stealId : User -> String -> Model -> Model
@@ -378,3 +381,44 @@ getAbstract documentDict id =
 
         Just doc ->
             Abstract.get doc.language doc.content
+
+
+searchInAbstract : String -> Abstract -> Bool
+searchInAbstract key abstract =
+    String.contains key (Abstract.digestFromAbstract abstract)
+
+
+filterDict : (value -> Bool) -> Dict comparable value -> List ( comparable, value )
+filterDict predicate dict =
+    let
+        filter key_ dict_ =
+            case Dict.get key_ dict_ of
+                Nothing ->
+                    Nothing
+
+                Just value ->
+                    if predicate value then
+                        Just ( key_, value )
+
+                    else
+                        Nothing
+
+        add key_ dict_ list_ =
+            case filter key_ dict_ of
+                Nothing ->
+                    list_
+
+                Just item ->
+                    item :: list_
+    in
+    List.foldl (\key list_ -> add key dict list_) [] (Dict.keys dict)
+
+
+searchForDocuments searchKey abstractDict =
+    []
+
+
+
+--searchForAbstracts : String -> Model -> List ( String, Abstract )
+--searchForAbstracts searchKey abstractDict =
+--    filterDict (\abstract -> String.contains searchKey (Abstract.getDigest abstract)) model.abstractdict

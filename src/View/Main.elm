@@ -189,6 +189,7 @@ header model width_ =
 
         -- , Button.l1LanguageButton model
         , wordCount model
+        , View.Input.searchDocsInput model
         , View.Utility.showIf (model.currentUser == Nothing) Button.signIn
         , View.Utility.showIf (model.currentUser == Nothing) (View.Input.usernameInput model)
         , View.Utility.showIf (model.currentUser == Nothing) (View.Input.passwordInput model)

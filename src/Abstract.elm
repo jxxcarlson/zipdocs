@@ -1,4 +1,13 @@
-module Abstract exposing (Abstract, empty, get, getDigest, getItem, getNormallzed, toString)
+module Abstract exposing
+    ( Abstract
+    , digestFromAbstract
+    , empty
+    , get
+    , getDigest
+    , getItem
+    , getNormallzed
+    , toString
+    )
 
 import Lang.Lang as Lang
 import Parser exposing ((|.), (|=), Parser)
@@ -36,6 +45,11 @@ getDigest lang source =
         a =
             get lang source
     in
+    [ a.title, a.author, a.abstract, a.tags ] |> String.join " " |> String.toLower
+
+
+digestFromAbstract : Abstract -> String
+digestFromAbstract a =
     [ a.title, a.author, a.abstract, a.tags ] |> String.join " " |> String.toLower
 
 

@@ -1,4 +1,4 @@
-module Codec exposing (..)
+module PDFCodec exposing (..)
 
 import Json.Encode as E
 

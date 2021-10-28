@@ -156,6 +156,7 @@ type FrontendMsg
       -- DOC
     | InputText String
     | InputSearchKey String
+    | Search
     | InputAuthorId String
     | NewDocument
     | SetDocumentAsCurrent Document
@@ -201,6 +202,7 @@ type ToBackend
     | CreateDocument (Maybe User) Document
     | GetLinks
     | StealDocument User String
+    | SearchForDocuments String
 
 
 type BackendMsg
