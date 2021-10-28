@@ -1,4 +1,4 @@
-module Abstract exposing (Abstract, empty, get, getDigest, getItem, getNormalizedAbstract, toString)
+module Abstract exposing (Abstract, empty, get, getDigest, getItem, getNormallzed, toString)
 
 import Lang.Lang as Lang
 import Parser exposing ((|.), (|=), Parser)
@@ -48,8 +48,8 @@ get lang source =
     }
 
 
-getNormalizedAbstract : Lang.Lang -> String -> Abstract
-getNormalizedAbstract lang source =
+getNormallzed : Lang.Lang -> String -> Abstract
+getNormallzed lang source =
     { title = getItem lang "title" source |> String.toLower
     , author = getItem lang "author" source |> String.toLower
     , abstract = getItem lang "abstract" source |> String.toLower
