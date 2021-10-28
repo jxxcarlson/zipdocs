@@ -1,11 +1,13 @@
 module View.Button exposing
     ( closeEditor
     , export
+    , exportJson
     , exportToLaTeX
     , exportToMarkown
     , getDocument
     , getDocumentByPrivateId
     , help
+    , importJson
     , l1LanguageButton
     , linkTemplate
     , markupLanguageButton
@@ -167,6 +169,16 @@ startupHelp =
 signIn : Element FrontendMsg
 signIn =
     buttonTemplate [] SignIn "Sign in | Sign up"
+
+
+exportJson : Element FrontendMsg
+exportJson =
+    buttonTemplate [] ExportJson "Export Backup"
+
+
+importJson : Element FrontendMsg
+importJson =
+    buttonTemplate [] JsonRequested "Restore from backup"
 
 
 

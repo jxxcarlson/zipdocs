@@ -1,4 +1,4 @@
-module Backend.Backup exposing (Backup, decodeBackup, encodeBackup)
+module Backend.Backup exposing (Backup, decodeBackup, encode)
 
 import Abstract exposing (Abstract)
 import Authentication
@@ -62,8 +62,8 @@ backupCodec =
         |> Codec.buildObject
 
 
-encodeBackup : BackendModel -> String
-encodeBackup model =
+encode : BackendModel -> String
+encode model =
     let
         backup =
             { message = "backup"

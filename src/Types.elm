@@ -8,6 +8,7 @@ import Browser.Navigation exposing (Key)
 import Data
 import Dict exposing (Dict)
 import Document exposing (Document)
+import File exposing (File)
 import Http
 import Lang.Lang
 import Random
@@ -148,6 +149,10 @@ type FrontendMsg
       -- ADMIN
     | InputSpecial String
     | RunSpecial
+    | ExportJson
+    | JsonRequested
+    | JsonSelected File
+    | JsonLoaded String
       -- USER
     | SignIn
     | SignOut
@@ -191,8 +196,10 @@ type SearchTerm
 type ToBackend
     = NoOpToBackend
       -- ADMIN
+    | GetBackupData
     | RunTask
     | GetStatus
+    | RestoreBackup BackendModel
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
@@ -213,6 +220,8 @@ type BackendMsg
 
 type ToFrontend
     = NoOpToFrontend
+      -- ADMIN
+    | SendBackupData String
       -- USEr
     | SendUser User
       -- DOCUMENT

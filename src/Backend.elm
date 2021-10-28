@@ -84,6 +84,12 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         -- ADMIN
+        GetBackupData ->
+            ( model, Backend.Cmd.exportJson model clientId )
+
+        RestoreBackup backendModel ->
+            ( backendModel, sendToFrontend clientId (SendMessage "... data restored from backup") )
+
         RunTask ->
             ( model, Cmd.none )
 

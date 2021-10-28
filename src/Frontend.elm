@@ -1,6 +1,7 @@
 module Frontend exposing (..)
 
 import Authentication
+import Backend.Backup
 import Browser exposing (UrlRequest(..))
 import Browser.Events
 import Browser.Navigation as Nav
@@ -9,7 +10,9 @@ import Config
 import Data
 import Docs
 import Document exposing (Access(..))
+import File
 import File.Download as Download
+import File.Select as Select
 import Frontend.Cmd
 import Frontend.PDF as PDF
 import Frontend.Update
@@ -193,6 +196,23 @@ update msg model =
             )
 
         -- ADMIN
+        ExportJson ->
+            ( model, sendToBackend GetBackupData )
+
+        JsonRequested ->
+            ( model, Select.file [ "text/json" ] JsonSelected )
+
+        JsonSelected file ->
+            ( model, Task.perform JsonLoaded (File.toString file) )
+
+        JsonLoaded jsonImport ->
+            case Backend.Backup.decodeBackup jsonImport of
+                Err _ ->
+                    ( { model | message = "Error decoding backup" }, Cmd.none )
+
+                Ok backendModel ->
+                    ( { model | message = "restoring backup ..." }, sendToBackend (RestoreBackup backendModel) )
+
         InputSpecial str ->
             { model | inputSpecial = str } |> withNoCmd
 
@@ -419,6 +439,9 @@ updateFromBackend msg model =
             ( { model | message = message }, Cmd.none )
 
         -- ADMIN
+        SendBackupData data ->
+            ( { model | message = "Backup data: " ++ String.fromInt (String.length data) ++ " chars" }, Download.string "zipdocs.json" "text/json" data )
+
         StatusReport items ->
             ( { model | statusReport = items }, Cmd.none )
 
