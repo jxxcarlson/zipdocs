@@ -2,6 +2,7 @@ module Backend exposing (..)
 
 import Abstract exposing (Abstract)
 import Authentication
+import Backend.Backup
 import Backend.Cmd
 import Backend.Update
 import Cmd.Extra
@@ -88,7 +89,7 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Backend.Cmd.exportJson model clientId )
 
         RestoreBackup backendModel ->
-            ( backendModel, sendToFrontend clientId (SendMessage "... data restored from backup") )
+            ( Backend.Backup.oldBackupToNew backendModel, sendToFrontend clientId (SendMessage "... data restored from backup") )
 
         RunTask ->
             ( model, Cmd.none )
@@ -391,7 +392,7 @@ getAbstract documentDict id =
 
 searchInAbstract : String -> Abstract -> Bool
 searchInAbstract key abstract =
-    String.contains key (Abstract.digestFromAbstract abstract)
+    String.contains key abstract.title
 
 
 filterDict : (value -> Bool) -> Dict comparable value -> List ( comparable, value )

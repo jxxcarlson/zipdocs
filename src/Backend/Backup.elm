@@ -1,4 +1,4 @@
-module Backend.Backup exposing (Backup, decodeBackup, encode)
+module Backend.Backup exposing (Backup, decodeBackup, encode, oldBackupToNew)
 
 import Abstract exposing (Abstract, AbstractOLD)
 import Authentication
@@ -9,8 +9,46 @@ import Document exposing (Document)
 import Lang.Lang exposing (Lang(..))
 import Random
 import Time
-import Types exposing (AbstractDict, AuthorDict, BackendModel, DocumentDict, DocumentLink, PublicIdDict, UsersDocumentsDict)
+import Types
+    exposing
+        ( AbstractDict
+        , AbstractDictOLD
+        , AuthorDict
+        , BackendModel
+        , BackupOLD
+        , DocumentDict
+        , DocumentLink
+        , PublicIdDict
+        , UsersDocumentsDict
+        )
 import User
+
+
+oldBackupToNew : BackupOLD -> Backup
+oldBackupToNew old =
+    { message = old.message
+    , currentTime = old.currentTime
+
+    -- RANDOM
+    , randomSeed = old.randomSeed
+    , uuidCount = old.uuidCount
+    , randomAtmosphericInt = old.randomAtmosphericInt
+
+    -- USER
+    , authenticationDict = old.authenticationDict
+
+    -- DATA
+    , documentDict = old.documentDict
+    , authorIdDict = old.authorIdDict
+    , publicIdDict = old.publicIdDict
+    , abstractDict = Dict.empty
+    , usersDocumentsDict = old.usersDocumentsDict
+    , links = old.links
+
+    --
+    ---- DOCUMENTS
+    , documents = old.documents
+    }
 
 
 type alias Backup =
@@ -30,32 +68,6 @@ type alias Backup =
     , authorIdDict : AuthorDict
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
-    , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
-
-    --
-    ---- DOCUMENTS
-    , documents : List Document
-    }
-
-
-type alias BackupOLD =
-    { message : String
-    , currentTime : Time.Posix
-
-    -- RANDOM
-    , randomSeed : Random.Seed
-    , uuidCount : Int
-    , randomAtmosphericInt : Maybe Int
-
-    -- USER
-    , authenticationDict : Authentication.AuthenticationDict
-
-    -- DATA
-    , documentDict : DocumentDict
-    , authorIdDict : AuthorDict
-    , publicIdDict : PublicIdDict
-    , abstractDict : Dict String AbstractOLD
     , usersDocumentsDict : UsersDocumentsDict
     , links : List DocumentLink
 
@@ -90,7 +102,7 @@ backupCodec =
 
 backupCodecOLD : Codec BackupOLD
 backupCodecOLD =
-    Codec.object Backup
+    Codec.object BackupOLD
         |> Codec.field "message" .message Codec.string
         |> Codec.field "currentTime" .currentTime posixCodec
         -- RANDOM
@@ -104,6 +116,7 @@ backupCodecOLD =
         |> Codec.field "authorIdDict" .authorIdDict (Codec.dict Codec.string)
         |> Codec.field "publicIdDict" .publicIdDict (Codec.dict Codec.string)
         |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodecOLD)
+        -- |> Codec.field "abstractDict" .abstractDict (Codec.succeed Dict.empty)
         |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
         |> Codec.field "links" .links (Codec.list documentLinkCodec)
         ---- DOCUMENTS
@@ -137,10 +150,11 @@ encode model =
 -- decodeBackup : String -> Result Codec.Error BackendModel
 
 
+decodeBackup : String -> Result Codec.Error BackupOLD
 decodeBackup str =
     let
         result =
-            Codec.decodeString backupCodec str
+            Codec.decodeString backupCodecOLD str
     in
     case result of
         Ok backup ->

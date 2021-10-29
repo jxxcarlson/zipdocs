@@ -1,6 +1,6 @@
 module Types exposing (..)
 
-import Abstract exposing (Abstract)
+import Abstract exposing (Abstract, AbstractOLD)
 import Authentication exposing (AuthenticationDict)
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
@@ -127,6 +127,10 @@ type alias AbstractDict =
     Dict String Abstract
 
 
+type alias AbstractDictOLD =
+    Dict String AbstractOLD
+
+
 type alias UserId =
     String
 
@@ -199,7 +203,7 @@ type ToBackend
     | GetBackupData
     | RunTask
     | GetStatus
-    | RestoreBackup BackendModel
+    | RestoreBackup BackupOLD
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
@@ -231,3 +235,29 @@ type ToFrontend
     | StatusReport (List String)
     | SetShowEditor Bool
     | GotLinks (List DocumentLink)
+
+
+type alias BackupOLD =
+    { message : String
+    , currentTime : Time.Posix
+
+    -- RANDOM
+    , randomSeed : Random.Seed
+    , uuidCount : Int
+    , randomAtmosphericInt : Maybe Int
+
+    -- USER
+    , authenticationDict : Authentication.AuthenticationDict
+
+    -- DATA
+    , documentDict : DocumentDict
+    , authorIdDict : AuthorDict
+    , publicIdDict : PublicIdDict
+    , abstractDict : AbstractDictOLD
+    , usersDocumentsDict : UsersDocumentsDict
+    , links : List DocumentLink
+
+    --
+    ---- DOCUMENTS
+    , documents : List Document
+    }
