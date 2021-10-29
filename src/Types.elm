@@ -85,7 +85,7 @@ type alias BackendModel =
 
 
 type alias DocumentLink =
-    { label : String, url : String }
+    { digest : String, label : String, url : String }
 
 
 
@@ -253,7 +253,7 @@ type alias BackupOLD =
     , documentDict : DocumentDict
     , authorIdDict : AuthorDict
     , publicIdDict : PublicIdDict
-    , abstractDict : AbstractDictOLD
+    , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
     , links : List DocumentLink
 

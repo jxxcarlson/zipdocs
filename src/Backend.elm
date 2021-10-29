@@ -95,7 +95,12 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         SearchForDocuments key ->
-            ( model, sendToFrontend clientId (SendDocuments (searchForDocuments key model)) )
+            ( model
+            , Cmd.batch
+                [ sendToFrontend clientId (SendDocuments (searchForDocuments key model))
+                , sendToFrontend clientId (GotLinks (searchForLinks key model))
+                ]
+            )
 
         GetStatus ->
             ( model, sendToFrontend clientId (StatusReport (statusReport model)) )
@@ -275,7 +280,7 @@ makeLinks model =
     { model | links = Maybe.Extra.values links }
 
 
-makeLink : String -> DocumentDict -> AbstractDict -> Maybe { label : String, url : String }
+makeLink : String -> DocumentDict -> AbstractDict -> Maybe DocumentLink
 makeLink docId documentDict abstractDict =
     case ( Dict.get docId documentDict, Dict.get docId abstractDict ) of
         ( Nothing, _ ) ->
@@ -286,7 +291,7 @@ makeLink docId documentDict abstractDict =
 
         ( Just doc, Just abstr ) ->
             if doc.public then
-                Just { label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
+                Just { digest = abstr.digest, label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
 
             else
                 Nothing
@@ -421,11 +426,16 @@ filterDict predicate dict =
     List.foldl (\key list_ -> add key dict list_) [] (Dict.keys dict)
 
 
-searchForDocuments searchKey abstractDict =
-    []
+searchForLinks key model =
+    List.filter (\link -> String.contains (String.toLower key) link.digest) model.links
 
 
-
---searchForAbstracts : String -> Model -> List ( String, Abstract )
---searchForAbstracts searchKey abstractDict =
---    filterDict (\abstract -> String.contains searchKey (Abstract.getDigest abstract)) model.abstractdict
+searchForDocuments key model =
+    let
+        ids =
+            Dict.toList model.abstractDict
+                |> List.map (\( id, abstr ) -> ( abstr.digest, id ))
+                |> List.filter (\( dig, _ ) -> String.contains (String.toLower key) dig)
+                |> List.map (\( _, id ) -> id)
+    in
+    List.foldl (\id acc -> Dict.get id model.documentDict :: acc) [] ids |> Maybe.Extra.values

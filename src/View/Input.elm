@@ -10,6 +10,7 @@ import Element as E exposing (Element, px)
 import Element.Font as Font
 import Element.Input as Input
 import Types exposing (FrontendModel, FrontendMsg(..))
+import View.Utility exposing (onEnter)
 
 
 enterPrivateId displayText =
@@ -19,6 +20,19 @@ enterPrivateId displayText =
 inputFieldTemplate : E.Length -> String -> (String -> msg) -> String -> Element msg
 inputFieldTemplate width_ default msg text =
     Input.text [ E.moveUp 5, Font.size 16, E.height (px 33), E.width width_ ]
+        { onChange = msg
+        , text = text
+        , label = Input.labelHidden default
+        , placeholder = Just <| Input.placeholder [ E.moveUp 5 ] (E.text default)
+        }
+
+
+
+-- inputFieldTemplate2 :  E.Length -> String -> (String -> msg) -> String -> Element msg
+
+
+inputFieldTemplate2 attr width_ default msg text =
+    Input.text ([ E.moveUp 5, Font.size 16, E.height (px 33), E.width width_ ] ++ attr)
         { onChange = msg
         , text = text
         , label = Input.labelHidden default
@@ -39,7 +53,7 @@ passwordTemplate width_ default msg text =
 
 searchDocsInput : FrontendModel -> Element FrontendMsg
 searchDocsInput model =
-    inputFieldTemplate E.fill "Search ..." InputSearchKey model.inputSearchKey
+    inputFieldTemplate2 [ onEnter Search |> E.htmlAttribute ] E.fill "Search ..." InputSearchKey model.inputSearchKey
 
 
 usernameInput model =

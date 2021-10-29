@@ -115,7 +115,7 @@ backupCodecOLD =
         |> Codec.field "documentDict" .documentDict (Codec.dict documentCodec)
         |> Codec.field "authorIdDict" .authorIdDict (Codec.dict Codec.string)
         |> Codec.field "publicIdDict" .publicIdDict (Codec.dict Codec.string)
-        |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodecOLD)
+        |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodec)
         -- |> Codec.field "abstractDict" .abstractDict (Codec.succeed Dict.empty)
         |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
         |> Codec.field "links" .links (Codec.list documentLinkCodec)
@@ -187,6 +187,7 @@ decodeBackup str =
 documentLinkCodec : Codec DocumentLink
 documentLinkCodec =
     Codec.object DocumentLink
+        |> Codec.field "digest" .digest Codec.string
         |> Codec.field "label" .label Codec.string
         |> Codec.field "url" .url Codec.string
         |> Codec.buildObject

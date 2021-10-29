@@ -5,6 +5,7 @@ module View.Utility exposing
     , hideIf
     , katexCSS
     , noFocus
+    , onEnter
     , setViewPortForSelectedLine
     , setViewportForElement
     , showIf
@@ -14,8 +15,23 @@ import Browser.Dom as Dom
 import Element exposing (Element)
 import Html
 import Html.Attributes as HA
+import Html.Events exposing (keyCode, on, onClick, onInput)
+import Json.Decode as D
 import Task exposing (Task)
 import Types exposing (FrontendModel, FrontendMsg)
+
+
+onEnter : FrontendMsg -> Html.Attribute FrontendMsg
+onEnter msg =
+    let
+        isEnter code =
+            if code == 13 then
+                D.succeed msg
+
+            else
+                D.fail "not ENTER"
+    in
+    on "keydown" (keyCode |> D.andThen isEnter)
 
 
 showIf : Bool -> Element msg -> Element msg
