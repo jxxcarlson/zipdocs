@@ -78,7 +78,7 @@ init url key =
 
       -- DOCUMENT
       , counter = 0
-      , inputSearchKey = initialSearchKey url
+      , inputSearchKey = ""
       , authorId = ""
       , documents = []
       , currentDocument = Just Docs.notSignedIn
@@ -115,15 +115,6 @@ urlAction path =
 
             _ ->
                 Cmd.none
-
-
-initialSearchKey : Url -> String
-initialSearchKey url =
-    if urlIsForGuest url then
-        ":public"
-
-    else
-        ":me"
 
 
 urlIsForGuest : Url -> Bool
