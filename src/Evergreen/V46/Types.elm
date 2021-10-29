@@ -149,7 +149,6 @@ type FrontendMsg
     | ChangePrintingState PrintingState
     | FinallyDoCleanPrintArtefacts String
     | Help String
-    | Help String
 
 
 type ToBackend
