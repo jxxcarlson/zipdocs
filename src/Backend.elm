@@ -53,7 +53,7 @@ init =
       , publicIdDict = Dict.empty
       , abstractDict = Dict.empty
       , usersDocumentsDict = Dict.empty
-      , links = []
+      , publicDocuments = []
 
       -- DOCUMENTS
       , documents =
@@ -75,7 +75,7 @@ update msg model =
             Backend.Update.gotAtmosphericRandomNumber model result
 
         Tick newTime ->
-            { model | currentTime = newTime } |> updateAbstracts |> makeLinks |> Cmd.Extra.withNoCmd
+            { model | currentTime = newTime } |> updateAbstracts |> Cmd.Extra.withNoCmd
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -98,7 +98,7 @@ updateFromFrontend sessionId clientId msg model =
             ( model
             , Cmd.batch
                 [ sendToFrontend clientId (SendDocuments (searchForDocuments key model))
-                , sendToFrontend clientId (GotLinks (searchForLinks key model))
+                , sendToFrontend clientId (GotPublicDocuments (searchForPublicDocuments key model))
                 ]
             )
 
@@ -234,8 +234,8 @@ updateFromFrontend sessionId clientId msg model =
                                 ]
                             )
 
-        GetLinks ->
-            ( model, sendToFrontend clientId (GotLinks model.links) )
+        GetPublicDocuments ->
+            ( model, sendToFrontend clientId (GotPublicDocuments (searchForPublicDocuments "" model)) )
 
         StealDocument user id ->
             stealId user id model |> Cmd.Extra.withNoCmd
@@ -271,13 +271,15 @@ postDocumentToCurrentUser maybeCurrentUser doc model =
                     { model | usersDocumentsDict = Dict.insert user.id (doc.id :: docIdList) model.usersDocumentsDict }
 
 
-makeLinks : Model -> Model
-makeLinks model =
-    let
-        links =
-            List.foldl (\docId acc -> makeLink docId model.documentDict model.abstractDict :: acc) [] (Dict.keys model.documentDict)
-    in
-    { model | links = Maybe.Extra.values links }
+
+--
+--makeLinks : Model -> Model
+--makeLinksLinks model =
+--    let
+--        links =
+--            List.foldl (\docId acc -> makeLink docId model.documentDict model.abstractDict :: acc) [] (Dict.keys model.documentDict)
+--    in
+--    { model | links = Maybe.Extra.values links }
 
 
 makeLink : String -> DocumentDict -> AbstractDict -> Maybe DocumentLink
@@ -426,8 +428,8 @@ filterDict predicate dict =
     List.foldl (\key list_ -> add key dict list_) [] (Dict.keys dict)
 
 
-searchForLinks key model =
-    List.filter (\link -> String.contains (String.toLower key) link.digest) model.links
+searchForPublicDocuments key model =
+    searchForDocuments key model |> List.filter (\doc -> doc.public)
 
 
 searchForDocuments key model =

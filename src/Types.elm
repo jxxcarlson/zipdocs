@@ -46,7 +46,7 @@ type alias FrontendModel =
     , printingState : PrintingState
     , documentDeleteState : DocumentDeleteState
     , counter : Int
-    , links : List DocumentLink
+    , publicDocuments : List Document
     }
 
 
@@ -77,7 +77,7 @@ type alias BackendModel =
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
+    , publicDocuments : List Document
 
     -- DOCUMENT
     , documents : List Document
@@ -207,11 +207,11 @@ type ToBackend
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
+    | GetPublicDocuments
     | SaveDocument (Maybe User) Document
     | GetDocumentByAuthorId String
     | GetDocumentByPublicId String
     | CreateDocument (Maybe User) Document
-    | GetLinks
     | StealDocument User String
     | SearchForDocuments String
 
@@ -234,7 +234,7 @@ type ToFrontend
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool
-    | GotLinks (List DocumentLink)
+    | GotPublicDocuments (List Document)
 
 
 type alias BackupOLD =
@@ -255,7 +255,7 @@ type alias BackupOLD =
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
+    , publicDocuments : List Document
 
     --
     ---- DOCUMENTS

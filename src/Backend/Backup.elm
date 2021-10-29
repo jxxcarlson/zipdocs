@@ -43,7 +43,7 @@ oldBackupToNew old =
     , publicIdDict = old.publicIdDict
     , abstractDict = Dict.empty
     , usersDocumentsDict = old.usersDocumentsDict
-    , links = old.links
+    , publicDocuments = []
 
     --
     ---- DOCUMENTS
@@ -69,7 +69,7 @@ type alias Backup =
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
+    , publicDocuments : List Document
 
     --
     ---- DOCUMENTS
@@ -94,7 +94,7 @@ backupCodec =
         |> Codec.field "publicIdDict" .publicIdDict (Codec.dict Codec.string)
         |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodec)
         |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
-        |> Codec.field "links" .links (Codec.list documentLinkCodec)
+        |> Codec.field "publicDocuments" .publicDocuments (Codec.list documentCodec)
         ---- DOCUMENTS
         |> Codec.field "documents" .documents (Codec.list documentCodec)
         |> Codec.buildObject
@@ -118,7 +118,7 @@ backupCodecOLD =
         |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodec)
         -- |> Codec.field "abstractDict" .abstractDict (Codec.succeed Dict.empty)
         |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
-        |> Codec.field "links" .links (Codec.list documentLinkCodec)
+        |> Codec.field "publicDocuments" .publicDocuments (Codec.list documentCodec)
         ---- DOCUMENTS
         |> Codec.field "documents" .documents (Codec.list documentCodec)
         |> Codec.buildObject
@@ -139,7 +139,7 @@ encode model =
             , publicIdDict = model.publicIdDict
             , abstractDict = model.abstractDict
             , usersDocumentsDict = model.usersDocumentsDict
-            , links = model.links
+            , publicDocuments = model.publicDocuments
             , documents = model.documents
             }
     in
@@ -174,7 +174,7 @@ decodeBackup str =
                 , publicIdDict = backup.publicIdDict
                 , abstractDict = backup.abstractDict
                 , usersDocumentsDict = backup.usersDocumentsDict
-                , links = backup.links
+                , publicDocuments = []
 
                 ---- DOCUMENTS
                 , documents = []

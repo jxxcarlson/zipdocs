@@ -108,13 +108,13 @@ viewMydocs model deltaH =
         , E.spacing 8
         ]
         (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
-            :: viewDocsAsLinks model.currentDocument
+            :: viewDocumentsInIndex model.currentDocument
                 (List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents)
         )
 
 
-viewDocsAsLinks : Maybe Document -> List Document -> List (Element FrontendMsg)
-viewDocsAsLinks currentDocument docs =
+viewDocumentsInIndex : Maybe Document -> List Document -> List (Element FrontendMsg)
+viewDocumentsInIndex currentDocument docs =
     List.map (Button.setDocumentAsCurrent currentDocument) docs
 
 
@@ -129,7 +129,7 @@ viewZipdocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Published Zipdocs") :: viewLinks model)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Published Zipdocs") :: viewPublicDocuments model)
 
 
 footer model width_ =
@@ -270,13 +270,13 @@ viewRendered model width_ =
                 ]
 
 
-viewLinks : Model -> List (Element FrontendMsg)
-viewLinks model =
-    List.map viewLink (List.sortBy (\l -> l.label) model.links)
+viewPublicDocuments : Model -> List (Element FrontendMsg)
+viewPublicDocuments model =
+    viewDocumentsInIndex model.currentDocument model.publicDocuments
 
 
-viewLink : DocumentLink -> Element FrontendMsg
-viewLink docLink =
+viewPublicDocument : DocumentLink -> Element FrontendMsg
+viewPublicDocument docLink =
     E.newTabLink [] { url = docLink.url, label = E.el [] (E.text (softTruncate softTruncateLimit docLink.label)) }
 
 

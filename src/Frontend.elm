@@ -85,9 +85,9 @@ init url key =
       , printingState = PrintWaiting
       , documentDeleteState = WaitingForDeleteAction
       , language = Lang.MiniLaTeX
-      , links = []
+      , publicDocuments = []
       }
-    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetLinks ]
+    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetPublicDocuments ]
     )
 
 
@@ -247,7 +247,7 @@ update msg model =
             ( model, Cmd.none )
 
         CloseEditor ->
-            ( { model | showEditor = False }, sendToBackend GetLinks )
+            ( { model | showEditor = False }, sendToBackend GetPublicDocuments )
 
         OpenEditor ->
             ( { model | showEditor = True }, Cmd.none )
@@ -423,8 +423,8 @@ updateFromBackend msg model =
             in
             ( { model | currentDocument = Just doc, language = doc.language, documents = documents }, Cmd.none )
 
-        GotLinks links ->
-            ( { model | links = links }, Cmd.none )
+        GotPublicDocuments publicDocuments ->
+            ( { model | publicDocuments = publicDocuments }, Cmd.none )
 
         SendMessage message ->
             ( { model | message = message }, Cmd.none )
