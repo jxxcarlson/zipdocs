@@ -126,7 +126,7 @@ type FrontendMsg
     | RunSpecial
     | ExportJson
     | JsonRequested
-    | JsonSelected File
+    | JsonSelected File.File
     | JsonLoaded String
     | SignIn
     | SignOut
