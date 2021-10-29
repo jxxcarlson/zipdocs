@@ -48,29 +48,21 @@ backendModel old =
         )
 
 
-transformDocumentLink : Old.DocumentLink -> New.DocumentLink
-transformDocumentLink old =
-    { digest = ""
-    , label = old.label
-    , url = old.url
-    }
-
-
-identityAuthenticationDict : Evergreen.V48.Authentication.AuthenticationDict -> Evergreen.V52Authentication.AuthenticationDict
+identityAuthenticationDict : Evergreen.V48.Authentication.AuthenticationDict -> Evergreen.V52.Authentication.AuthenticationDict
 identityAuthenticationDict old =
     Dict.map (\id value -> identityUserData value) old
 
 
-identityUserData : Evergreen.V48.Authentication.UserData -> Evergreen.V52Authentication.UserData
+identityUserData : Evergreen.V48.Authentication.UserData -> Evergreen.V52.Authentication.UserData
 identityUserData old =
     { user = old.user
     , credentials = identityCredentials old.credentials
     }
 
 
-identityCredentials : Evergreen.V48.Credentials.Credentials -> Evergreen.V52Credentials.Credentials
+identityCredentials : Evergreen.V48.Credentials.Credentials -> Evergreen.V52.Credentials.Credentials
 identityCredentials (Evergreen.V48.Credentials.V1 a b) =
-    Evergreen.V52Credentials.V1 a b
+    Evergreen.V52.Credentials.V1 a b
 
 
 identityDocumentDict : Old.DocumentDict -> New.DocumentDict
@@ -78,7 +70,7 @@ identityDocumentDict old =
     Dict.map (\id value -> identityDocument value) old
 
 
-identityDocument : Evergreen.V48.Document.Document -> Evergreen.V52Document.Document
+identityDocument : Evergreen.V48.Document.Document -> Evergreen.V52.Document.Document
 identityDocument old =
     { id = old.id
     , publicId = old.publicId
@@ -91,17 +83,17 @@ identityDocument old =
     }
 
 
-identityLang : Evergreen.V48.Lang.Lang.Lang -> Evergreen.V52Lang.Lang.Lang
+identityLang : Evergreen.V48.Lang.Lang.Lang -> Evergreen.V52.Lang.Lang.Lang
 identityLang lang =
     case lang of
         Evergreen.V48.Lang.Lang.L1 ->
-            Evergreen.V52Lang.Lang.L1
+            Evergreen.V52.Lang.Lang.L1
 
         Evergreen.V48.Lang.Lang.Markdown ->
-            Evergreen.V52Lang.Lang.Markdown
+            Evergreen.V52.Lang.Lang.Markdown
 
         Evergreen.V48.Lang.Lang.MiniLaTeX ->
-            Evergreen.V52Lang.Lang.MiniLaTeX
+            Evergreen.V52.Lang.Lang.MiniLaTeX
 
 
 frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
