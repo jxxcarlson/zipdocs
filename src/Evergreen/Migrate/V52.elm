@@ -6,12 +6,11 @@ import Evergreen.V48.Credentials
 import Evergreen.V48.Document
 import Evergreen.V48.Lang.Lang
 import Evergreen.V48.Types as Old
+import Evergreen.V52.Authentication
+import Evergreen.V52.Credentials
+import Evergreen.V52.Document
+import Evergreen.V52.Lang.Lang
 import Evergreen.V52.Types as New
-import Evergreen.V52Authentication
-import Evergreen.V52Credentials
-import Evergreen.V52Document
-import Evergreen.V52Lang.Lang
-import Evergreen.V52Types as New
 import Lamdera.Migrations exposing (..)
 
 
