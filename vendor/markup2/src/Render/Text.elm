@@ -91,6 +91,7 @@ markupDict =
         , ( "abstract", \g s a textList -> abstract g s a textList )
         , ( "tags", \g s a textList -> Element.none )
         , ( "author", \g s a textList -> author g s a textList )
+        , ( "large", \g s a textList -> large g s a textList )
 
         -- MiniLaTeX stuff
         , ( "term", \g s a textList -> term g s a textList )
@@ -176,6 +177,10 @@ macro2 element g s a textList =
 
         _ ->
             el [ Font.color errorColor ] (Element.text "Invalid arguments")
+
+
+large g s a textList =
+    simpleElement [ Font.size 18 ] g s a textList
 
 
 author g s a textList =
