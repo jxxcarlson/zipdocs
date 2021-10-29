@@ -1,10 +1,10 @@
 module Backend.Backup exposing (Backup, decodeBackup, encode)
 
-import Abstract exposing (Abstract)
+import Abstract exposing (Abstract, AbstractOLD)
 import Authentication
 import Codec exposing (Codec)
 import Credentials
-import Dict
+import Dict exposing (Dict)
 import Document exposing (Document)
 import Lang.Lang exposing (Lang(..))
 import Random
@@ -39,6 +39,32 @@ type alias Backup =
     }
 
 
+type alias BackupOLD =
+    { message : String
+    , currentTime : Time.Posix
+
+    -- RANDOM
+    , randomSeed : Random.Seed
+    , uuidCount : Int
+    , randomAtmosphericInt : Maybe Int
+
+    -- USER
+    , authenticationDict : Authentication.AuthenticationDict
+
+    -- DATA
+    , documentDict : DocumentDict
+    , authorIdDict : AuthorDict
+    , publicIdDict : PublicIdDict
+    , abstractDict : Dict String AbstractOLD
+    , usersDocumentsDict : UsersDocumentsDict
+    , links : List DocumentLink
+
+    --
+    ---- DOCUMENTS
+    , documents : List Document
+    }
+
+
 backupCodec : Codec Backup
 backupCodec =
     Codec.object Backup
@@ -55,6 +81,29 @@ backupCodec =
         |> Codec.field "authorIdDict" .authorIdDict (Codec.dict Codec.string)
         |> Codec.field "publicIdDict" .publicIdDict (Codec.dict Codec.string)
         |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodec)
+        |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
+        |> Codec.field "links" .links (Codec.list documentLinkCodec)
+        ---- DOCUMENTS
+        |> Codec.field "documents" .documents (Codec.list documentCodec)
+        |> Codec.buildObject
+
+
+backupCodecOLD : Codec BackupOLD
+backupCodecOLD =
+    Codec.object Backup
+        |> Codec.field "message" .message Codec.string
+        |> Codec.field "currentTime" .currentTime posixCodec
+        -- RANDOM
+        |> Codec.field "randomSeed" .randomSeed randomSeedCodec
+        |> Codec.field "uuidCount" .uuidCount Codec.int
+        |> Codec.field "randomAtmosphericInt" .randomAtmosphericInt (Codec.maybe Codec.int)
+        -- USER
+        |> Codec.field "authenticationDict" .authenticationDict (Codec.dict userDataCodec)
+        -- DATA
+        |> Codec.field "documentDict" .documentDict (Codec.dict documentCodec)
+        |> Codec.field "authorIdDict" .authorIdDict (Codec.dict Codec.string)
+        |> Codec.field "publicIdDict" .publicIdDict (Codec.dict Codec.string)
+        |> Codec.field "abstractDict" .abstractDict (Codec.dict abstractCodecOLD)
         |> Codec.field "usersDocumentsDict" .usersDocumentsDict (Codec.dict (Codec.list Codec.string))
         |> Codec.field "links" .links (Codec.list documentLinkCodec)
         ---- DOCUMENTS
@@ -129,6 +178,16 @@ documentLinkCodec =
         |> Codec.buildObject
 
 
+abstractCodecOLD : Codec AbstractOLD
+abstractCodecOLD =
+    Codec.object AbstractOLD
+        |> Codec.field "title" .title Codec.string
+        |> Codec.field "author" .author Codec.string
+        |> Codec.field "abstract" .abstract Codec.string
+        |> Codec.field "tags" .tags Codec.string
+        |> Codec.buildObject
+
+
 abstractCodec : Codec Abstract
 abstractCodec =
     Codec.object Abstract
@@ -136,6 +195,7 @@ abstractCodec =
         |> Codec.field "author" .author Codec.string
         |> Codec.field "abstract" .abstract Codec.string
         |> Codec.field "tags" .tags Codec.string
+        |> Codec.field "digest" .digest Codec.string
         |> Codec.buildObject
 
 

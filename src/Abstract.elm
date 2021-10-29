@@ -1,11 +1,9 @@
 module Abstract exposing
     ( Abstract
-    , digestFromAbstract
+    , AbstractOLD
     , empty
     , get
-    , getDigest
     , getItem
-    , getNormallzed
     , toString
     )
 
@@ -14,6 +12,10 @@ import Parser exposing ((|.), (|=), Parser)
 
 
 type alias Abstract =
+    { title : String, author : String, abstract : String, tags : String, digest : String }
+
+
+type alias AbstractOLD =
     { title : String, author : String, abstract : String, tags : String }
 
 
@@ -27,47 +29,30 @@ empty =
     , author = ""
     , abstract = ""
     , tags = ""
+    , digest = ""
     }
-
-
-{-|
-
-    > getDigest MiniLaTeX mi
-    "intro to chem p.j. snodgrass  best, course, ever" : String
-
-    > getDigest Markdown ma
-    "intro to chem p.j. snodgrass  best, courser, ever"
-
--}
-getDigest : Lang.Lang -> String -> String
-getDigest lang source =
-    let
-        a =
-            get lang source
-    in
-    [ a.title, a.author, a.abstract, a.tags ] |> String.join " " |> String.toLower
-
-
-digestFromAbstract : Abstract -> String
-digestFromAbstract a =
-    [ a.title, a.author, a.abstract, a.tags ] |> String.join " " |> String.toLower
 
 
 get : Lang.Lang -> String -> Abstract
 get lang source =
-    { title = getItem lang "title" source
-    , author = getItem lang "author" source
-    , abstract = getItem lang "abstract" source
-    , tags = getItem lang "tags" source
-    }
+    let
+        title =
+            getItem lang "title" source
 
+        author =
+            getItem lang "author" source
 
-getNormallzed : Lang.Lang -> String -> Abstract
-getNormallzed lang source =
-    { title = getItem lang "title" source |> String.toLower
-    , author = getItem lang "author" source |> String.toLower
-    , abstract = getItem lang "abstract" source |> String.toLower
-    , tags = getItem lang "tags" source |> String.toLower
+        abstract =
+            getItem lang "abstract" source
+
+        tags =
+            getItem lang "tags" source
+    in
+    { title = title
+    , author = author
+    , abstract = abstract
+    , tags = tags
+    , digest = [ title, author, abstract, tags ] |> String.join " " |> String.toLower
     }
 
 
