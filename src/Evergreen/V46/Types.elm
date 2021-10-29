@@ -125,7 +125,7 @@ type FrontendMsg
     | RunSpecial
     | ExportJson
     | JsonRequested
-    | JsonSelected File
+    | JsonSelected File.File
     | JsonLoaded String
     | SignIn
     | SignOut
@@ -149,23 +149,6 @@ type FrontendMsg
     | ChangePrintingState PrintingState
     | FinallyDoCleanPrintArtefacts String
     | Help String
-
-
-type alias BackendModel =
-    { message : String
-    , currentTime : Time.Posix
-    , randomSeed : Random.Seed
-    , uuidCount : Int
-    , randomAtmosphericInt : Maybe Int
-    , authenticationDict : Evergreen.V46.Authentication.AuthenticationDict
-    , documentDict : DocumentDict
-    , authorIdDict : AuthorDict
-    , publicIdDict : PublicIdDict
-    , abstractDict : AbstractDict
-    , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
-    , documents : List Evergreen.V46.Document.Document
-    }
 
 
 type ToBackend
