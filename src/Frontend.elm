@@ -8,6 +8,7 @@ import Browser.Navigation as Nav
 import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Config
 import Data
+import Debounce exposing (Debounce)
 import Docs
 import Document exposing (Access(..))
 import Expression.ASTTools
@@ -78,6 +79,8 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , sourceText = ""
+      , debounce = Debounce.init
       , counter = 0
       , inputSearchKey = ""
       , authorId = ""
@@ -90,6 +93,13 @@ init url key =
       }
     , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetPublicDocuments ]
     )
+
+
+debounceConfig : Debounce.Config FrontendMsg
+debounceConfig =
+    { strategy = Debounce.soon 300
+    , transform = DebounceMsg
+    }
 
 
 urlAction path =
@@ -257,35 +267,38 @@ update msg model =
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
 
         -- DOCUMENT
+        DebounceMsg msg_ ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceConfig
+                        (Debounce.takeLast save)
+                        msg_
+                        model.debounce
+            in
+            ( { model | debounce = debounce }
+            , cmd
+            )
+
+        Saved str ->
+            updateDoc model str
+
         Search ->
             ( model, sendToBackend (SearchForDocuments model.inputSearchKey) )
 
         InputText str ->
-            case model.currentDocument of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just doc ->
-                    let
-                        parseData =
-                            Markup.API.parse doc.language model.counter (String.lines doc.content)
-
-                        newTitle =
-                            Expression.ASTTools.getItem "title" parseData.ast |> Maybe.withDefault "Untitled"
-
-                        newDocument =
-                            { doc | content = str, title = newTitle }
-
-                        documents =
-                            List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
-                    in
-                    ( { model
-                        | currentDocument = Just newDocument
-                        , counter = model.counter + 1
-                        , documents = documents
-                      }
-                    , sendToBackend (SaveDocument model.currentUser newDocument)
-                    )
+            -- updateDoc model str
+            let
+                -- Push your values here.
+                ( debounce, cmd ) =
+                    Debounce.push debounceConfig str model.debounce
+            in
+            ( { model
+                | sourceText = str
+                , debounce = debounce
+              }
+            , cmd
+            )
 
         InputAuthorId str ->
             ( { model | authorId = str }, Cmd.none )
@@ -303,7 +316,13 @@ update msg model =
             Frontend.Update.newDocument model
 
         SetDocumentAsCurrent doc ->
-            ( { model | currentDocument = Just doc, message = Config.appUrl ++ "/p/" ++ doc.publicId }, Cmd.none )
+            ( { model
+                | currentDocument = Just doc
+                , sourceText = doc.content
+                , message = Config.appUrl ++ "/p/" ++ doc.publicId
+              }
+            , Cmd.none
+            )
 
         SetLanguage lang ->
             ( { model | language = lang }, Cmd.none )
@@ -353,6 +372,39 @@ update msg model =
 
         FinallyDoCleanPrintArtefacts privateId ->
             ( model, Cmd.none )
+
+
+save : String -> Cmd FrontendMsg
+save s =
+    Task.perform Saved (Task.succeed s)
+
+
+updateDoc model str =
+    case model.currentDocument of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just doc ->
+            let
+                parseData =
+                    Markup.API.parse doc.language model.counter (String.lines doc.content)
+
+                newTitle =
+                    Expression.ASTTools.getItem "title" parseData.ast |> Maybe.withDefault "Untitled"
+
+                newDocument =
+                    { doc | content = str, title = newTitle }
+
+                documents =
+                    List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
+            in
+            ( { model
+                | currentDocument = Just newDocument
+                , counter = model.counter + 1
+                , documents = documents
+              }
+            , sendToBackend (SaveDocument model.currentUser newDocument)
+            )
 
 
 changePrintingState printingState doc =

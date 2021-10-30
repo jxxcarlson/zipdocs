@@ -238,7 +238,7 @@ viewEditor_ model width_ =
                 , Background.color (E.rgb255 240 241 255)
                 ]
                 { onChange = InputText
-                , text = doc.content
+                , text = model.sourceText
                 , placeholder = Nothing
                 , label = Input.labelHidden "Enter source text here"
                 , spellcheck = False

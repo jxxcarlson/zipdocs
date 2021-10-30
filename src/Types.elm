@@ -6,6 +6,7 @@ import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Browser.Navigation exposing (Key)
 import Data
+import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Document exposing (Document)
 import File exposing (File)
@@ -39,6 +40,8 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , debounce : Debounce String
+    , sourceText : String
     , currentDocument : Maybe Document
     , documents : List Document
     , language : Lang.Lang.Lang
@@ -164,6 +167,8 @@ type FrontendMsg
     | InputPassword String
       -- DOC
     | InputText String
+    | DebounceMsg Debounce.Msg
+    | Saved String
     | InputSearchKey String
     | Search
     | InputAuthorId String
