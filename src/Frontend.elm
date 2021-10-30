@@ -10,6 +10,7 @@ import Config
 import Data
 import Docs
 import Document exposing (Access(..))
+import Expression.ASTTools
 import File
 import File.Download as Download
 import File.Select as Select
@@ -270,7 +271,7 @@ update msg model =
                             Markup.API.parse doc.language model.counter (String.lines doc.content)
 
                         newTitle =
-                            Markup.API.getTitle parseData.ast |> Maybe.withDefault "Untitled"
+                            Expression.ASTTools.getItem "title" parseData.ast |> Maybe.withDefault "Untitled"
 
                         newDocument =
                             { doc | content = str, title = newTitle }
