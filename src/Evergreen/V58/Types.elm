@@ -122,7 +122,7 @@ type FrontendMsg
     | RunSpecial
     | ExportJson
     | JsonRequested
-    | JsonSelected File
+    | JsonSelected File.Filw
     | JsonLoaded String
     | SignIn
     | SignOut
