@@ -271,17 +271,9 @@ update msg model =
         Render msg_ ->
             case msg_ of
                 Render.Msg.SendMeta m ->
-                    let
-                        _ =
-                            Debug.log "XXXX, ROWS (first, last)" ( m.loc.begin.row + 1, m.loc.end.row + 1 )
-                    in
                     ( model, Cmd.none )
 
                 GetPublicDocument id ->
-                    let
-                        _ =
-                            Debug.log "XXXX, id)" id
-                    in
                     ( model, sendToBackend (FetchDocumentById id) )
 
         DebounceMsg msg_ ->
