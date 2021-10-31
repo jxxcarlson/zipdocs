@@ -133,18 +133,19 @@ nextTokenState tokenState token =
                     Lang.Token.Common.TSB (k + 1)
 
                 Token.Symbol ")" _ ->
-                    let
-                        k_ =
-                            k - 1
-                    in
-                    if k_ == 0 then
-                        Lang.Token.Common.TSA
-
-                    else
-                        Lang.Token.Common.TSB k_
+                    Lang.Token.Common.TSB (k - 1)
 
                 _ ->
-                    tokenState
+                    case token of
+                        Token.Text s _ ->
+                            if String.trim s == "" then
+                                Lang.Token.Common.TSA
+
+                            else
+                                tokenState
+
+                        _ ->
+                            tokenState
 
 
 processToken : Lang -> State -> Step State State
