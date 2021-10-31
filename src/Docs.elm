@@ -1,6 +1,7 @@
 module Docs exposing (docsNotFound, notSignedIn)
 
 import Document exposing (Document, empty)
+import Lang.Lang exposing (Lang(..))
 
 
 notSignedIn : Document
@@ -9,29 +10,27 @@ notSignedIn =
         | content = welcomeText
         , id = "id-sys-1"
         , publicId = "public-sys-1"
+        , language = MiniLaTeX
     }
 
 
 welcomeText =
     """
 
+\\title{Welcome to Zipdocs}
 
 
-
-[! title](Welcome to Zipdocs)
-
-
-_Use Zipdocs to effortlessly create documents in Markdown or MiniLaTeX.  A hassle-free, no-setup way to share short notes and articles, problem sets,
- etc. Support for mathematical notation and images.  Export your work to LaTeX, or generate a PDF file._
+\\italic{Use Zipdocs to effortlessly create documents in Markdown or MiniLaTeX.  A hassle-free, no-setup way to share short notes and articles, problem sets,
+ etc. Support for mathematical notation and images.  Export your work to LaTeX, or generate a PDF file.}
 
 $$
   \\int_0^1 x^n dx = \\frac{1}{n+1}
 $$
 
-*Login.* Not needed.  Just choose your language, click on *New Document*, and start writing.  But if you would like to
+\\strong{Login.} Not needed.  Just choose your language, click on \\strong{New Document}, and start writing.  But if you would like to
 set up an account, go for it. (There are some advantages: you don't have to keep track of document links).
 
-When you click on _New Document_, you will get two links, which you will find in the footer of this app. The  first is private;
+When you click on \\italic{New Document}, you will get two links, which you will find in the footer of this app. The  first is private;
 use it to  edit your document in the future.  If you are using the no-login option, keep this link safe!
 There is no way to recover it.
 
@@ -39,13 +38,13 @@ The second link is to share with colleagues and
 friends.  With it anyone can read your document but not
 edit it.  Look in the footer of the app for the links.
 
-Documents are automatically saved as you edit
+Documents are automatically saved as you edit.
 
 
-[Getting the most out of Zipdocs](https://zipdocs.lamdera.app/p/cp389-gs210)  • [About MiniLaTeX](https://zipdocs.lamdera.app/p/bn493-tt086)  •
-[About XMarkdown](https://zipdocs.lamdera.app/p/cc265-li129)
+More info: \\xlink{Getting the most out of Zipdocs}{kn886-dd906}  • \\xlink{About MiniLaTeX}{qw172-kk223}  •
+\\xlink{About XMarkdown}{nr402-bm985}
 
-![Living near birds can provoke happiness](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU)
+\\image{https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRF0zeCqrYUxEmZXRq_IdQtrqlYyAWZ627og&usqp=CAU}
 """
 
 

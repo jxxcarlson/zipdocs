@@ -192,6 +192,19 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( { model | documentDict = documentDict }, Cmd.none )
 
+        FetchDocumentById docId ->
+            case Dict.get docId model.documentDict of
+                Nothing ->
+                    ( model, sendToFrontend clientId (SendMessage "Couldn't find that document") )
+
+                Just document ->
+                    ( model
+                    , Cmd.batch
+                        [ sendToFrontend clientId (SendDocument document)
+                        , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ document.publicId ++ ", id = " ++ document.id))
+                        ]
+                    )
+
         GetDocumentByAuthorId authorId ->
             case Dict.get authorId model.authorIdDict of
                 Nothing ->
@@ -211,7 +224,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ sendToFrontend clientId (SendDocument doc)
                                 , sendToFrontend clientId (SetShowEditor True)
-                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
                             )
 

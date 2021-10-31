@@ -8,6 +8,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
 import Markup.API
+import Render.Msg
 import String.Extra
 import Types exposing (..)
 import View.Button as Button
@@ -264,7 +265,7 @@ viewRendered model width_ =
                 ]
                 [ View.Utility.katexCSS
                 , E.column [ E.spacing 18, E.width (E.px (width_ - 60)) ]
-                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content))
+                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content) |> List.map (E.map Render))
 
                 --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
                 ]

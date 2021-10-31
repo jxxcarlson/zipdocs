@@ -13,6 +13,7 @@ import File exposing (File)
 import Http
 import Lang.Lang
 import Random
+import Render.Msg
 import Time
 import Url exposing (Url)
 import User exposing (User)
@@ -166,6 +167,7 @@ type FrontendMsg
     | InputUsername String
     | InputPassword String
       -- DOC
+    | Render Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg
     | Saved String
@@ -212,6 +214,7 @@ type ToBackend
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
+    | FetchDocumentById String
     | GetPublicDocuments
     | SaveDocument (Maybe User) Document
     | GetDocumentByAuthorId String

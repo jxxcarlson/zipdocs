@@ -25,6 +25,7 @@ import Lang.Lang as Lang exposing (Lang(..))
 import List.Extra
 import Markup.API
 import Process
+import Render.Msg exposing (MarkupMsg(..))
 import Task
 import Types exposing (..)
 import Url exposing (Url)
@@ -267,6 +268,22 @@ update msg model =
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
 
         -- DOCUMENT
+        Render msg_ ->
+            case msg_ of
+                Render.Msg.SendMeta m ->
+                    let
+                        _ =
+                            Debug.log "XXXX, ROWS (first, last)" ( m.loc.begin.row + 1, m.loc.end.row + 1 )
+                    in
+                    ( model, Cmd.none )
+
+                GetPublicDocument id ->
+                    let
+                        _ =
+                            Debug.log "XXXX, id)" id
+                    in
+                    ( model, sendToBackend (FetchDocumentById id) )
+
         DebounceMsg msg_ ->
             let
                 ( debounce, cmd ) =
@@ -319,7 +336,7 @@ update msg model =
             ( { model
                 | currentDocument = Just doc
                 , sourceText = doc.content
-                , message = Config.appUrl ++ "/p/" ++ doc.publicId
+                , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
               }
             , Cmd.none
             )
