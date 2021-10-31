@@ -330,7 +330,7 @@ update msg model =
                 | currentDocument = Just doc
                 , sourceText = doc.content
                 , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
-                , permissions = permissions
+                , permissions = setPermissions model.currentUser permissions doc
               }
             , Cmd.none
             )
@@ -383,6 +383,14 @@ update msg model =
 
         FinallyDoCleanPrintArtefacts privateId ->
             ( model, Cmd.none )
+
+
+setPermissions currentUser permissions document =
+    if Just document.author == currentUser then
+        CanEdit
+
+    else
+        permissions
 
 
 save : String -> Cmd FrontendMsg
