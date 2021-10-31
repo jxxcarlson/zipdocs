@@ -262,6 +262,7 @@ documentCodec =
         |> Codec.field "language" .language languageCodec
         |> Codec.field "title" .title Codec.string
         |> Codec.field "public" .public Codec.bool
+        |> Codec.field "author" .author (Codec.maybe Codec.string)
         |> Codec.buildObject
 
 

@@ -19,6 +19,7 @@ type alias Document =
     , language : Lang.Lang.Lang
     , title : String
     , public : Bool
+    , author : Maybe String
     }
 
 
@@ -41,6 +42,7 @@ empty =
     , language = Lang.Lang.Markdown
     , title = "(Untitled)"
     , public = False
+    , author = Nothing
     }
 
 
