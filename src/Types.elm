@@ -41,6 +41,7 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , permissions : DocPermissions
     , debounce : Debounce String
     , sourceText : String
     , currentDocument : Maybe Document
@@ -175,7 +176,7 @@ type FrontendMsg
     | Search
     | InputAuthorId String
     | NewDocument
-    | SetDocumentAsCurrent Document
+    | SetDocumentAsCurrent DocPermissions Document
     | SetLanguage Lang.Lang.Lang
     | SetPublic Document Bool
     | AskFoDocumentById String
@@ -237,12 +238,17 @@ type ToFrontend
       -- USEr
     | SendUser User
       -- DOCUMENT
-    | SendDocument Document
+    | SendDocument DocPermissions Document
     | SendDocuments (List Document)
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool
     | GotPublicDocuments (List Document)
+
+
+type DocPermissions
+    = ReadOnly
+    | CanEdit
 
 
 type alias BackupOLD =

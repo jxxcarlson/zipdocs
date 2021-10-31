@@ -169,7 +169,7 @@ updateFromFrontend sessionId clientId msg model =
                             Dict.insert user.id (doc.id :: oldIdList) model.usersDocumentsDict
 
                 message =
-                    "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
+                    "Author link: " ++ Config.appUrl ++ "/a/au-" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/pu-" ++ publicIdTokenData.token
             in
             { model
                 | randomSeed = publicIdTokenData.seed
@@ -179,7 +179,7 @@ updateFromFrontend sessionId clientId msg model =
                 , usersDocumentsDict = usersDocumentsDict
             }
                 |> Cmd.Extra.withCmds
-                    [ sendToFrontend clientId (SendDocument doc)
+                    [ sendToFrontend clientId (SendDocument CanEdit doc)
                     , sendToFrontend clientId (SendMessage message)
                     ]
 
@@ -198,12 +198,20 @@ updateFromFrontend sessionId clientId msg model =
                     ( model, sendToFrontend clientId (SendMessage "Couldn't find that document") )
 
                 Just document ->
-                    ( model
-                    , Cmd.batch
-                        [ sendToFrontend clientId (SendDocument document)
-                        , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ document.publicId ++ ", id = " ++ document.id))
-                        ]
-                    )
+                    if document.public then
+                        ( model
+                        , Cmd.batch
+                            [ sendToFrontend clientId (SendDocument ReadOnly document)
+                            , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ document.publicId ++ ", id = " ++ document.id))
+                            ]
+                        )
+
+                    else
+                        ( model
+                        , Cmd.batch
+                            [ sendToFrontend clientId (SendMessage "Sorry, that document is not public")
+                            ]
+                        )
 
         GetDocumentByAuthorId authorId ->
             case Dict.get authorId model.authorIdDict of
@@ -222,7 +230,7 @@ updateFromFrontend sessionId clientId msg model =
                         Just doc ->
                             ( model
                             , Cmd.batch
-                                [ sendToFrontend clientId (SendDocument doc)
+                                [ sendToFrontend clientId (SendDocument CanEdit doc)
                                 , sendToFrontend clientId (SetShowEditor True)
                                 , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
@@ -241,7 +249,7 @@ updateFromFrontend sessionId clientId msg model =
                         Just doc ->
                             ( model
                             , Cmd.batch
-                                [ sendToFrontend clientId (SendDocument doc)
+                                [ sendToFrontend clientId (SendDocument ReadOnly doc)
                                 , sendToFrontend clientId (SetShowEditor False)
                                 , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
@@ -252,21 +260,6 @@ updateFromFrontend sessionId clientId msg model =
 
         StealDocument user id ->
             stealId user id model |> Cmd.Extra.withNoCmd
-
-
-sendDoc model clientId path =
-    case List.head (List.filter (\doc -> doc.publicId == String.dropLeft 3 path) model.documents) of
-        Nothing ->
-            ( model
-            , sendToFrontend clientId (SendMessage <| "Could not find document")
-            )
-
-        Just doc ->
-            ( model
-            , Cmd.batch
-                [ sendToFrontend clientId (SendDocument doc)
-                ]
-            )
 
 
 postDocumentToCurrentUser : Maybe User -> Document.Document -> Model -> Model

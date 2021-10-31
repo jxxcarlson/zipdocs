@@ -80,6 +80,7 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , permissions = ReadOnly
       , sourceText = ""
       , debounce = Debounce.init
       , counter = 0
@@ -324,11 +325,12 @@ update msg model =
         NewDocument ->
             Frontend.Update.newDocument model
 
-        SetDocumentAsCurrent doc ->
+        SetDocumentAsCurrent permissions doc ->
             ( { model
                 | currentDocument = Just doc
                 , sourceText = doc.content
                 , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
+                , permissions = permissions
               }
             , Cmd.none
             )
@@ -475,15 +477,31 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         -- DOCUMENT
-        SendDocument doc ->
+        SendDocument access doc ->
             let
                 documents =
                     Util.insertInList doc model.documents
 
                 message =
                     "Documents: " ++ String.fromInt (List.length documents)
+
+                showEditor =
+                    case access of
+                        ReadOnly ->
+                            False
+
+                        CanEdit ->
+                            True
             in
-            ( { model | currentDocument = Just doc, language = doc.language, documents = documents }, Cmd.none )
+            ( { model
+                | sourceText = doc.content
+                , showEditor = showEditor
+                , currentDocument = Just doc
+                , language = doc.language
+                , documents = documents
+              }
+            , Cmd.none
+            )
 
         GotPublicDocuments publicDocuments ->
             ( { model | publicDocuments = publicDocuments }, Cmd.none )

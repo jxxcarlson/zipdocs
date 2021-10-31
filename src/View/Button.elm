@@ -231,8 +231,8 @@ miniLaTeXLanguageButton model =
     buttonTemplate [ bg ] (SetLanguage Lang.Lang.MiniLaTeX) "MiniLaTeX"
 
 
-setDocumentAsCurrent : Maybe Document.Document -> Document.Document -> Element FrontendMsg
-setDocumentAsCurrent currentDocument document =
+setDocumentAsCurrent : DocPermissions -> Maybe Document.Document -> Document.Document -> Element FrontendMsg
+setDocumentAsCurrent docPermissions currentDocument document =
     let
         fg =
             if currentDocument == Just document then
@@ -249,7 +249,7 @@ setDocumentAsCurrent currentDocument document =
                 Font.unitalicized
     in
     Input.button []
-        { onPress = Just (SetDocumentAsCurrent document)
+        { onPress = Just (SetDocumentAsCurrent docPermissions document)
         , label = E.el [ E.centerX, E.centerY, Font.size 14, fg, style ] (E.text document.title)
         }
 

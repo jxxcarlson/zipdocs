@@ -109,14 +109,15 @@ viewMydocs model deltaH =
         , E.spacing 8
         ]
         (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
-            :: viewDocumentsInIndex model.currentDocument
+            :: viewDocumentsInIndex CanEdit
+                model.currentDocument
                 (List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents)
         )
 
 
-viewDocumentsInIndex : Maybe Document -> List Document -> List (Element FrontendMsg)
-viewDocumentsInIndex currentDocument docs =
-    List.map (Button.setDocumentAsCurrent currentDocument) docs
+viewDocumentsInIndex : DocPermissions -> Maybe Document -> List Document -> List (Element FrontendMsg)
+viewDocumentsInIndex docPermissions currentDocument docs =
+    List.map (Button.setDocumentAsCurrent docPermissions currentDocument) docs
 
 
 viewZipdocs model deltaH =
@@ -186,7 +187,7 @@ header model width_ =
     E.row [ E.spacing 12, E.width E.fill ]
         [ Button.newDocument
         , View.Utility.showIf model.showEditor Button.closeEditor
-        , View.Utility.hideIf (model.currentUser == Nothing || model.showEditor) Button.openEditor
+        , View.Utility.hideIf (model.currentUser == Nothing || model.permissions == ReadOnly) Button.openEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
         , View.Utility.showIf model.showEditor (Button.togglePublic model.currentDocument)
@@ -273,7 +274,7 @@ viewRendered model width_ =
 
 viewPublicDocuments : Model -> List (Element FrontendMsg)
 viewPublicDocuments model =
-    viewDocumentsInIndex model.currentDocument model.publicDocuments
+    viewDocumentsInIndex ReadOnly model.currentDocument model.publicDocuments
 
 
 viewPublicDocument : DocumentLink -> Element FrontendMsg
