@@ -140,7 +140,7 @@ printToPDF model =
 
 newDocument : Element FrontendMsg
 newDocument =
-    buttonTemplate [] NewDocument "New Document"
+    buttonTemplate [] NewDocument "New"
 
 
 closeEditor : Element FrontendMsg
@@ -150,7 +150,7 @@ closeEditor =
 
 openEditor : Element FrontendMsg
 openEditor =
-    buttonTemplate [] OpenEditor "Open Editor"
+    buttonTemplate [] OpenEditor "Editor"
 
 
 runSpecial : Element FrontendMsg

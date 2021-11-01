@@ -294,7 +294,7 @@ update msg model =
             updateDoc model str
 
         Search ->
-            ( model, sendToBackend (SearchForDocuments model.inputSearchKey) )
+            ( model, sendToBackend (SearchForDocuments (model.currentUser |> Maybe.map .username) model.inputSearchKey) )
 
         InputText str ->
             -- updateDoc model str
@@ -386,11 +386,16 @@ update msg model =
 
 
 setPermissions currentUser permissions document =
-    if Just document.author == currentUser then
-        CanEdit
+    case document.author of
+        Nothing ->
+            permissions
 
-    else
-        permissions
+        Just author ->
+            if Just author == Maybe.map .username currentUser then
+                CanEdit
+
+            else
+                permissions
 
 
 save : String -> Cmd FrontendMsg

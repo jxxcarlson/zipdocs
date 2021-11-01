@@ -116,7 +116,7 @@ type alias DocumentDict =
     Dict String Document
 
 
-{-| Document ids -> Document abstracts
+{-| User id -> List docId
 -}
 type alias UsersDocumentsDict =
     Dict UserId (List DocId)
@@ -222,7 +222,7 @@ type ToBackend
     | GetDocumentByPublicId String
     | CreateDocument (Maybe User) Document
     | StealDocument User String
-    | SearchForDocuments String
+    | SearchForDocuments (Maybe String) String
 
 
 type BackendMsg

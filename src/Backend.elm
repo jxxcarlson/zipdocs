@@ -94,10 +94,10 @@ updateFromFrontend sessionId clientId msg model =
         RunTask ->
             ( model, Cmd.none )
 
-        SearchForDocuments key ->
+        SearchForDocuments maybeUsername key ->
             ( model
             , Cmd.batch
-                [ sendToFrontend clientId (SendDocuments (searchForDocuments key model))
+                [ sendToFrontend clientId (SendDocuments (searchForUserDocuments maybeUsername key model))
                 , sendToFrontend clientId (GotPublicDocuments (searchForPublicDocuments key model))
                 ]
             )
@@ -168,7 +168,16 @@ updateFromFrontend sessionId clientId msg model =
                             in
                             Dict.insert user.id (doc.id :: oldIdList) model.usersDocumentsDict
 
+                list =
+                    case maybeCurrentUser of
+                        Nothing ->
+                            []
+
+                        Just user ->
+                            Dict.get user.id usersDocumentsDict |> Maybe.withDefault []
+
                 message =
+                    --  "userIds : " ++ String.fromInt (List.length list)
                     "Author link: " ++ Config.appUrl ++ "/a/au-" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/pu-" ++ publicIdTokenData.token
             in
             { model
@@ -260,32 +269,6 @@ updateFromFrontend sessionId clientId msg model =
 
         StealDocument user id ->
             stealId user id model |> Cmd.Extra.withNoCmd
-
-
-postDocumentToCurrentUser : Maybe User -> Document.Document -> Model -> Model
-postDocumentToCurrentUser maybeCurrentUser doc model =
-    case maybeCurrentUser of
-        Nothing ->
-            model
-
-        Just user ->
-            case Dict.get user.id model.usersDocumentsDict of
-                Nothing ->
-                    { model | usersDocumentsDict = Dict.insert user.id [ doc.id ] model.usersDocumentsDict }
-
-                Just docIdList ->
-                    { model | usersDocumentsDict = Dict.insert user.id (doc.id :: docIdList) model.usersDocumentsDict }
-
-
-
---
---makeLinks : Model -> Model
---makeLinksLinks model =
---    let
---        links =
---            List.foldl (\docId acc -> makeLink docId model.documentDict model.abstractDict :: acc) [] (Dict.keys model.documentDict)
---    in
---    { model | links = Maybe.Extra.values links }
 
 
 makeLink : String -> DocumentDict -> AbstractDict -> Maybe DocumentLink
@@ -434,10 +417,22 @@ filterDict predicate dict =
     List.foldl (\key list_ -> add key dict list_) [] (Dict.keys dict)
 
 
+searchForPublicDocuments : String -> Model -> List Document.Document
 searchForPublicDocuments key model =
     searchForDocuments key model |> List.filter (\doc -> doc.public)
 
 
+searchForUserDocuments : Maybe String -> String -> Model -> List Document.Document
+searchForUserDocuments maybeUsername key model =
+    case maybeUsername of
+        Nothing ->
+            []
+
+        Just username ->
+            searchForDocuments key model |> List.filter (\doc -> doc.author == Just username)
+
+
+searchForDocuments : String -> Model -> List Document.Document
 searchForDocuments key model =
     let
         ids =

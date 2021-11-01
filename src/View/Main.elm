@@ -98,6 +98,10 @@ viewRenderedContainer model =
 
 viewMydocs : Model -> Int -> Element FrontendMsg
 viewMydocs model deltaH =
+    let
+        docs =
+            List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents
+    in
     E.column
         [ E.width (E.px <| indexWidth model.windowWidth)
         , E.height (E.px (appHeight_ model - deltaH))
@@ -108,10 +112,10 @@ viewMydocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text <| "My Docs (" ++ String.fromInt (List.length docs) ++ ")")
             :: viewDocumentsInIndex CanEdit
                 model.currentDocument
-                (List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents)
+                docs
         )
 
 
@@ -131,7 +135,7 @@ viewZipdocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Published Zipdocs") :: viewPublicDocuments model)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text <| "Published Zipdocs (" ++ String.fromInt (List.length model.publicDocuments) ++ ")") :: viewPublicDocuments model)
 
 
 footer model width_ =
@@ -187,13 +191,14 @@ header model width_ =
     E.row [ E.spacing 12, E.width E.fill ]
         [ Button.newDocument
         , View.Utility.showIf model.showEditor Button.closeEditor
-        , View.Utility.hideIf (model.currentUser == Nothing || model.permissions == ReadOnly) Button.openEditor
+        , View.Utility.hideIf (model.currentUser == Nothing || model.permissions == ReadOnly || model.showEditor) Button.openEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
         , View.Utility.showIf model.showEditor (Button.togglePublic model.currentDocument)
 
         -- , Button.l1LanguageButton model
-        , wordCount model
+        , View.Utility.showIf model.showEditor (wordCount model)
+        , E.el [ Font.size 14, Font.color (E.rgb 0.9 0.9 0.9) ] (E.text (currentAuthor model.currentDocument))
         , View.Input.searchDocsInput model
         , View.Utility.showIf (model.currentUser == Nothing) Button.signIn
         , View.Utility.showIf (model.currentUser == Nothing) (View.Input.usernameInput model)
@@ -203,6 +208,16 @@ header model width_ =
         -- , Button.help
         , E.el [ E.alignRight ] (title Config.appName)
         ]
+
+
+currentAuthor : Maybe Document -> String
+currentAuthor maybeDoc =
+    case maybeDoc of
+        Nothing ->
+            ""
+
+        Just doc ->
+            doc.author |> Maybe.withDefault ""
 
 
 wordCount : Model -> Element FrontendMsg
