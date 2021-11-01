@@ -28,7 +28,10 @@ $$
 $$
 
 \\strong{Login.} Not needed.  Just choose your language, click on \\strong{New Document}, and start writing.  But if you would like to
-set up an account, go for it. (There are some advantages: you don't have to keep track of document links).
+set up an account, just enter your username and password in the header and click on \\strong{Sign in | Sign up}.
+
+There are various advantages to having an account.  Most importantly, you have a searchable list of all your
+documents, and you don't have to keep track of document links.
 
 When you click on \\italic{New Document}, you will get two links, which you will find in the footer of this app. The  first is private;
 use it to  edit your document in the future.  If you are using the no-login option, keep this link safe!
