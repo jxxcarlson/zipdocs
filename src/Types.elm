@@ -1,16 +1,19 @@
 module Types exposing (..)
 
-import Abstract exposing (Abstract)
+import Abstract exposing (Abstract, AbstractOLD)
 import Authentication exposing (AuthenticationDict)
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Browser.Navigation exposing (Key)
 import Data
+import Debounce exposing (Debounce)
 import Dict exposing (Dict)
 import Document exposing (Document)
+import File exposing (File)
 import Http
 import Lang.Lang
 import Random
+import Render.Msg
 import Time
 import Url exposing (Url)
 import User exposing (User)
@@ -38,6 +41,9 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , permissions : DocPermissions
+    , debounce : Debounce String
+    , sourceText : String
     , currentDocument : Maybe Document
     , documents : List Document
     , language : Lang.Lang.Lang
@@ -45,7 +51,7 @@ type alias FrontendModel =
     , printingState : PrintingState
     , documentDeleteState : DocumentDeleteState
     , counter : Int
-    , links : List DocumentLink
+    , publicDocuments : List Document
     }
 
 
@@ -76,7 +82,7 @@ type alias BackendModel =
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , links : List DocumentLink
+    , publicDocuments : List Document
 
     -- DOCUMENT
     , documents : List Document
@@ -84,7 +90,7 @@ type alias BackendModel =
 
 
 type alias DocumentLink =
-    { label : String, url : String }
+    { digest : String, label : String, url : String }
 
 
 
@@ -110,7 +116,7 @@ type alias DocumentDict =
     Dict String Document
 
 
-{-| Document ids -> Document abstracts
+{-| User id -> List docId
 -}
 type alias UsersDocumentsDict =
     Dict UserId (List DocId)
@@ -124,6 +130,10 @@ type alias UsersDocumentsDict =
 -}
 type alias AbstractDict =
     Dict String Abstract
+
+
+type alias AbstractDictOLD =
+    Dict String AbstractOLD
 
 
 type alias UserId =
@@ -148,17 +158,25 @@ type FrontendMsg
       -- ADMIN
     | InputSpecial String
     | RunSpecial
+    | ExportJson
+    | JsonRequested
+    | JsonSelected File
+    | JsonLoaded String
       -- USER
     | SignIn
     | SignOut
     | InputUsername String
     | InputPassword String
       -- DOC
+    | Render Render.Msg.MarkupMsg
     | InputText String
+    | DebounceMsg Debounce.Msg
+    | Saved String
     | InputSearchKey String
+    | Search
     | InputAuthorId String
     | NewDocument
-    | SetDocumentAsCurrent Document
+    | SetDocumentAsCurrent DocPermissions Document
     | SetLanguage Lang.Lang.Lang
     | SetPublic Document Bool
     | AskFoDocumentById String
@@ -190,17 +208,21 @@ type SearchTerm
 type ToBackend
     = NoOpToBackend
       -- ADMIN
+    | GetBackupData
     | RunTask
     | GetStatus
+    | RestoreBackup BackupOLD
       -- USER
     | SignInOrSignUp String String
       -- DOCUMENT
+    | FetchDocumentById String
+    | GetPublicDocuments
     | SaveDocument (Maybe User) Document
     | GetDocumentByAuthorId String
     | GetDocumentByPublicId String
     | CreateDocument (Maybe User) Document
-    | GetLinks
     | StealDocument User String
+    | SearchForDocuments (Maybe String) String
 
 
 type BackendMsg
@@ -211,12 +233,45 @@ type BackendMsg
 
 type ToFrontend
     = NoOpToFrontend
+      -- ADMIN
+    | SendBackupData String
       -- USEr
     | SendUser User
       -- DOCUMENT
-    | SendDocument Document
+    | SendDocument DocPermissions Document
     | SendDocuments (List Document)
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool
-    | GotLinks (List DocumentLink)
+    | GotPublicDocuments (List Document)
+
+
+type DocPermissions
+    = ReadOnly
+    | CanEdit
+
+
+type alias BackupOLD =
+    { message : String
+    , currentTime : Time.Posix
+
+    -- RANDOM
+    , randomSeed : Random.Seed
+    , uuidCount : Int
+    , randomAtmosphericInt : Maybe Int
+
+    -- USER
+    , authenticationDict : Authentication.AuthenticationDict
+
+    -- DATA
+    , documentDict : DocumentDict
+    , authorIdDict : AuthorDict
+    , publicIdDict : PublicIdDict
+    , abstractDict : AbstractDict
+    , usersDocumentsDict : UsersDocumentsDict
+    , publicDocuments : List Document
+
+    --
+    ---- DOCUMENTS
+    , documents : List Document
+    }

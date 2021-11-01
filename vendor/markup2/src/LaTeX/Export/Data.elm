@@ -4,8 +4,8 @@ module LaTeX.Export.Data exposing (preamble)
 -}
 
 
-preamble : String -> String
-preamble title =
+preamble : String -> String -> String -> String
+preamble title author date =
     """
 \\documentclass[11pt, oneside]{article}
 
@@ -77,6 +77,7 @@ preamble title =
 \\newtheorem{remark}{Remark}
 \\newcommand{\\comment}[1]{}
 \\newcommand{\\innertableofcontents}{}
+\\newcommand{\\nothing}[1]{}
 
 %% Theorems
 \\newtheorem{theorem}{Theorem}
@@ -105,6 +106,8 @@ preamble title =
 
 
 \\title{""" ++ title ++ """}
+\\author{""" ++ author ++ """}
+\\date{""" ++ date ++ """}
 
 \\maketitle
 

@@ -47,6 +47,7 @@ newDocument model =
             { emptyDoc
                 | content = title
                 , language = model.language
+                , author = Maybe.map .username model.currentUser
             }
     in
     ( { model | showEditor = True }, sendToBackend (CreateDocument model.currentUser doc) )

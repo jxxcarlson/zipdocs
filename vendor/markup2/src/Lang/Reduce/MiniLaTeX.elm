@@ -2,16 +2,40 @@ module Lang.Reduce.MiniLaTeX exposing (recoverFromError, reduce, reduceFinal)
 
 import Either exposing (Either(..))
 import Expression.AST as AST exposing (Expr)
-import Expression.Stack as Stack
+import Expression.ASTTools as ASTTools
+import Expression.Stack as Stack exposing (Stack)
 import Expression.State exposing (State)
 import Expression.Token as Token exposing (Token(..))
+import List.Extra
 import Markup.Common exposing (Step(..))
-import Markup.Debugger exposing (debugGreen)
+import Markup.Debugger exposing (debugGreen, debugYellow)
+
+
+fixedPoint : State -> State
+fixedPoint state =
+    let
+        newState =
+            reduce state
+    in
+    if state == newState then
+        state |> debugGreen "EXIT FIXED POINT"
+
+    else
+        fixedPoint state |> debugGreen "FIXED POINT AGAIN"
 
 
 reduceFinal : State -> State
 reduceFinal state =
-    case state.stack of
+    state |> reduce |> reduceFinal_
+
+
+reduceFinal_ : State -> State
+reduceFinal_ state =
+    (let
+        _ =
+            debugYellow "reduceFinal_, IN" state
+     in
+     case state.stack of
         (Right (AST.Expr name args loc)) :: [] ->
             { state | committed = AST.Expr (transformMacroNames name) (List.reverse args) loc :: state.committed, stack = [] } |> debugGreen "FINAL RULE 1"
 
@@ -26,8 +50,15 @@ reduceFinal state =
             in
             { state | committed = red :: blue :: state.committed, stack = rest }
 
+        --(Left (Token.Text str loc)) :: rest ->
+        --           {state | stack = rest, committed = (AST.Text str loc):: state.committed}  |> debugGreen "FINAL RULE 2"
+        (Left (Token.Text str loc)) :: (Right expr) :: [] ->
+            { state | stack = [], committed = AST.Text str loc :: expr :: state.committed } |> debugGreen "FINAL RULE 2"
+
         _ ->
-            state |> debugGreen "FINAL RULE 3"
+            state |> debugGreen "REDUCE FINAL, PASS"
+    )
+        |> debugYellow "reduceFinal_, OUT"
 
 
 {-|
@@ -43,6 +74,9 @@ reduce state =
         (Left (Token.Text str loc)) :: [] ->
             reduceAux (AST.Text str loc) [] state |> debugGreen "RULE 1"
 
+        (Left (Token.Text str loc)) :: (Right expr) :: [] ->
+            { state | stack = [], committed = AST.Text str loc :: AST.reverseContents expr :: state.committed } |> debugGreen "RULE X"
+
         -- Recognize an Expr
         (Left (Token.Symbol "}" loc4)) :: (Left (Token.Text arg loc3)) :: (Left (Token.Symbol "{" _)) :: (Left (Token.FunctionName name loc1)) :: rest ->
             { state | stack = Right (AST.Expr (transformMacroNames name) [ AST.Text arg loc3 ] { begin = loc1.begin, end = loc4.end }) :: rest } |> debugGreen "RULE 2"
@@ -51,13 +85,21 @@ reduce state =
         (Left (Token.Symbol "}" loc4)) :: (Left (Token.Text arg loc3)) :: (Left (Token.Symbol "{" _)) :: (Right (AST.Expr name args loc1)) :: rest ->
             { state | stack = Right (AST.Expr (transformMacroNames name) (AST.Text arg loc3 :: args) { begin = loc1.begin, end = loc4.end }) :: rest } |> debugGreen "RULE 3"
 
-        -- Merge new text into an existing Expr
-        (Left (Token.Text str loc2)) :: (Right (AST.Expr name args loc1)) :: rest ->
-            { state | committed = AST.Text str loc2 :: AST.Expr (transformMacroNames name) (List.reverse args) loc1 :: state.committed, stack = rest } |> debugGreen "RULE 4"
-
+        --
+        ---- Merge new text into an existing Expr
+        --(Left (Token.Text str loc2)) :: (Right (AST.Expr name args loc1)) :: rest ->
+        --    { state | committed = AST.Text str loc2 :: AST.Expr (transformMacroNames name) (List.reverse args) loc1 :: state.committed, stack = rest } |> debugGreen "RULE 4"
         -- create a new expression from an existing one which occurs as a function argument
         (Left (Token.Symbol "}" loc4)) :: (Right (AST.Expr exprName args loc3)) :: (Left (Token.Symbol "{" _)) :: (Left (Token.FunctionName fName loc1)) :: rest ->
             { state | committed = AST.Expr fName [ AST.Expr (transformMacroNames exprName) args loc3 ] { begin = loc1.begin, end = loc4.end } :: state.committed, stack = rest } |> debugGreen "RULE 5"
+
+        -- Transform "{" .... "}" to Right (Arg [....])
+        (Left (Token.Symbol "}" _)) :: rest ->
+            { state | stack = reduceArg state.stack } |> debugGreen "RULE A"
+
+        -- reduce  arg :: functionName :: rest to expr :: rest
+        (Right (AST.Arg args loc2)) :: (Left (Token.FunctionName name loc1)) :: rest ->
+            { state | stack = Right (AST.Expr name args { begin = loc1.begin, end = loc2.end }) :: rest } |> debugGreen "RULE B"
 
         -- create a verbatim expression from a verbatim token, clearing the stack
         (Left (Token.Verbatim label content loc)) :: [] ->
@@ -65,6 +107,54 @@ reduce state =
 
         _ ->
             state
+
+
+{-|
+
+    If the stack is prefix::rest, where prefix = (L S "}", L a, L b, ...  , (L S "}"), convert it
+    to newPrefix = Arg [R a, R b, ], and set the stack to newPrefix :: rest
+
+-}
+reduceArg : Stack -> Stack
+reduceArg stack =
+    let
+        _ =
+            debugYellow "reduce, IN" stack
+    in
+    (case stack of
+        (Left (Token.Symbol "}" loc2)) :: rest ->
+            let
+                _ =
+                    debugYellow "reduceArg" rest
+
+                interior =
+                    List.Extra.takeWhile (\item -> not (Stack.symbolToString item == Just "{")) rest
+
+                n =
+                    List.length interior |> debugYellow "n, interior length"
+
+                found =
+                    List.Extra.getAt n rest |> debugYellow "found"
+            in
+            case ( List.Extra.getAt n rest, Stack.toExprList interior ) of
+                ( Nothing, _ ) ->
+                    stack
+
+                ( _, Nothing ) ->
+                    stack
+
+                ( Just stackItem, Just exprList ) ->
+                    case stackItem of
+                        Left (Token.Symbol "{" loc1) ->
+                            Right (AST.Arg exprList { begin = loc1.begin, end = loc2.end }) :: List.drop (n + 1) rest
+
+                        _ ->
+                            stack
+
+        _ ->
+            stack
+    )
+        |> debugYellow "reduceArg (OUT)"
 
 
 transformMacroNames : String -> String

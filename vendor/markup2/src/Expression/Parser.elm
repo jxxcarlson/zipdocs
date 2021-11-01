@@ -13,9 +13,11 @@ import Lang.Lang exposing (Lang(..))
 import Lang.Reduce.L1 as L1
 import Lang.Reduce.Markdown as Markdown
 import Lang.Reduce.MiniLaTeX as MiniLaTeX
+import Lang.Token.Common
 import List.Extra
 import Markup.Common exposing (Step(..), loop)
 import Markup.Debugger exposing (..)
+import Markup.Simplify as Simplify
 
 
 parseExpr : Lang -> String -> List AST.Expr
@@ -49,13 +51,14 @@ parseToBlock lang id firstLine str =
 -}
 run : Lang -> String -> State
 run lang input =
-    loop (init input) (nextState lang) |> debugCyan "FINAL STATE"
+    loop (init input) (nextStep lang) |> debugCyan "FINAL STATE"
 
 
 init : String -> State
 init str =
     { sourceText = str
     , scanPointer = 0
+    , tokenState = Lang.Token.Common.TSA
     , end = String.length str
     , stack = []
     , committed = []
@@ -87,18 +90,18 @@ init str =
          in the main parser module (this module).
 
 -}
-nextState : Lang -> State -> Step State State
-nextState lang state_ =
+nextStep : Lang -> State -> Step State State
+nextStep lang state_ =
     { state_ | count = state_.count + 1 }
         -- |> debug2 ("STATE (" ++ String.fromInt (state_.count + 1) ++ ")")
         |> reduce lang
-        |> nextState_ lang
+        |> nextStep_ lang
 
 
-nextState_ : Lang -> State -> Step State State
-nextState_ lang state =
+nextStep_ : Lang -> State -> Step State State
+nextStep_ lang state =
     if state.scanPointer >= state.end then
-        finalize lang (reduceFinal lang state |> debugMagenta "reduceFinal (APPL)")
+        finalize lang (reduceFinal lang state |> debugMagenta "reduceFinal")
 
     else
         processToken lang state
@@ -113,9 +116,64 @@ finalize lang state =
         recoverFromError lang state |> debugCyan "ReduceFinal (2, recoverFromErrors)"
 
 
+nextTokenState : Lang.Token.Common.TokenState -> Token -> Lang.Token.Common.TokenState
+nextTokenState tokenState token =
+    case tokenState of
+        Lang.Token.Common.TSA ->
+            case token of
+                Token.Symbol "[" _ ->
+                    Lang.Token.Common.TSB 0
+
+                _ ->
+                    tokenState
+
+        Lang.Token.Common.TSB k ->
+            case token of
+                Token.Symbol "(" _ ->
+                    Lang.Token.Common.TSB (k + 1)
+
+                Token.Symbol ")" _ ->
+                    Lang.Token.Common.TSB (k - 1)
+
+                _ ->
+                    case token of
+                        Token.Text s _ ->
+                            if String.trim s == "" then
+                                Lang.Token.Common.TSA
+
+                            else
+                                tokenState
+
+                        _ ->
+                            tokenState
+
+
 processToken : Lang -> State -> Step State State
 processToken lang state =
-    case Tokenizer.get lang state.scanPointer (String.dropLeft state.scanPointer state.sourceText) of
+    let
+        token =
+            Tokenizer.get lang state.tokenState state.scanPointer (String.dropLeft state.scanPointer state.sourceText)
+
+        tokenState =
+            if lang == Markdown then
+                nextTokenState state.tokenState token
+
+            else
+                state.tokenState
+
+        _ =
+            debugBlue "n" state.count
+
+        _ =
+            debugBlue "Stack" state.stack |> Simplify.stack
+
+        _ =
+            debugBlue "Committed" state.committed |> Simplify.expressions
+
+        _ =
+            debugBlue "Token" token
+    in
+    case token of
         TokenError errorData meta ->
             let
                 ( row, col ) =
@@ -134,10 +192,10 @@ processToken lang state =
                     String.length unprocessedText |> debugBlue "tokenLength"
             in
             -- Oops, exit
-            Loop { state | committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
+            Loop { state | tokenState = tokenState, committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
 
         newToken ->
-            Loop (shift newToken (reduce lang state))
+            Loop (shift newToken (reduce lang { state | tokenState = tokenState })) |> debugRed "processToken, OUT"
 
 
 errorValue : State -> ErrorData -> Expr

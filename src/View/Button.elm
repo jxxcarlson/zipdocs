@@ -1,11 +1,13 @@
 module View.Button exposing
     ( closeEditor
     , export
+    , exportJson
     , exportToLaTeX
     , exportToMarkown
     , getDocument
     , getDocumentByPrivateId
     , help
+    , importJson
     , l1LanguageButton
     , linkTemplate
     , markupLanguageButton
@@ -138,7 +140,7 @@ printToPDF model =
 
 newDocument : Element FrontendMsg
 newDocument =
-    buttonTemplate [] NewDocument "New Document"
+    buttonTemplate [] NewDocument "New"
 
 
 closeEditor : Element FrontendMsg
@@ -148,7 +150,7 @@ closeEditor =
 
 openEditor : Element FrontendMsg
 openEditor =
-    buttonTemplate [] OpenEditor "Open Editor"
+    buttonTemplate [] OpenEditor "Editor"
 
 
 runSpecial : Element FrontendMsg
@@ -169,8 +171,23 @@ signIn =
     buttonTemplate [] SignIn "Sign in | Sign up"
 
 
+exportJson : Element FrontendMsg
+exportJson =
+    buttonTemplate [] ExportJson "Export Backup"
+
+
+importJson : Element FrontendMsg
+importJson =
+    buttonTemplate [] JsonRequested "Restore from backup"
+
+
 
 -- USER
+
+
+search : Element FrontendMsg
+search =
+    buttonTemplate [] Search "Search"
 
 
 getDocument : Element FrontendMsg
@@ -214,8 +231,8 @@ miniLaTeXLanguageButton model =
     buttonTemplate [ bg ] (SetLanguage Lang.Lang.MiniLaTeX) "MiniLaTeX"
 
 
-setDocumentAsCurrent : Maybe Document.Document -> Document.Document -> Element FrontendMsg
-setDocumentAsCurrent currentDocument document =
+setDocumentAsCurrent : DocPermissions -> Maybe Document.Document -> Document.Document -> Element FrontendMsg
+setDocumentAsCurrent docPermissions currentDocument document =
     let
         fg =
             if currentDocument == Just document then
@@ -223,10 +240,17 @@ setDocumentAsCurrent currentDocument document =
 
             else
                 Font.color (E.rgb 0 0 0.8)
+
+        style =
+            if document.public then
+                Font.italic
+
+            else
+                Font.unitalicized
     in
     Input.button []
-        { onPress = Just (SetDocumentAsCurrent document)
-        , label = E.el [ E.centerX, E.centerY, Font.size 14, fg ] (E.text document.title)
+        { onPress = Just (SetDocumentAsCurrent docPermissions document)
+        , label = E.el [ E.centerX, E.centerY, Font.size 14, fg, style ] (E.text document.title)
         }
 
 

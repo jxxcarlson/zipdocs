@@ -2,6 +2,7 @@ module Backend exposing (..)
 
 import Abstract exposing (Abstract)
 import Authentication
+import Backend.Backup
 import Backend.Cmd
 import Backend.Update
 import Cmd.Extra
@@ -52,7 +53,7 @@ init =
       , publicIdDict = Dict.empty
       , abstractDict = Dict.empty
       , usersDocumentsDict = Dict.empty
-      , links = []
+      , publicDocuments = []
 
       -- DOCUMENTS
       , documents =
@@ -74,7 +75,7 @@ update msg model =
             Backend.Update.gotAtmosphericRandomNumber model result
 
         Tick newTime ->
-            { model | currentTime = newTime } |> updateAbstracts |> makeLinks |> Cmd.Extra.withNoCmd
+            { model | currentTime = newTime } |> updateAbstracts |> Cmd.Extra.withNoCmd
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -84,8 +85,22 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         -- ADMIN
+        GetBackupData ->
+            ( model, Backend.Cmd.exportJson model clientId )
+
+        RestoreBackup backendModel ->
+            ( Backend.Backup.oldBackupToNew backendModel, sendToFrontend clientId (SendMessage "... data restored from backup") )
+
         RunTask ->
             ( model, Cmd.none )
+
+        SearchForDocuments maybeUsername key ->
+            ( model
+            , Cmd.batch
+                [ sendToFrontend clientId (SendDocuments (searchForUserDocuments maybeUsername key model))
+                , sendToFrontend clientId (GotPublicDocuments (searchForPublicDocuments key model))
+                ]
+            )
 
         GetStatus ->
             ( model, sendToFrontend clientId (StatusReport (statusReport model)) )
@@ -153,8 +168,17 @@ updateFromFrontend sessionId clientId msg model =
                             in
                             Dict.insert user.id (doc.id :: oldIdList) model.usersDocumentsDict
 
+                list =
+                    case maybeCurrentUser of
+                        Nothing ->
+                            []
+
+                        Just user ->
+                            Dict.get user.id usersDocumentsDict |> Maybe.withDefault []
+
                 message =
-                    "Author link: " ++ Config.appUrl ++ "/a/" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/" ++ publicIdTokenData.token
+                    --  "userIds : " ++ String.fromInt (List.length list)
+                    "Author link: " ++ Config.appUrl ++ "/a/au-" ++ authorIdTokenData.token ++ ", Public link:" ++ Config.appUrl ++ "/p/pu-" ++ publicIdTokenData.token
             in
             { model
                 | randomSeed = publicIdTokenData.seed
@@ -164,18 +188,39 @@ updateFromFrontend sessionId clientId msg model =
                 , usersDocumentsDict = usersDocumentsDict
             }
                 |> Cmd.Extra.withCmds
-                    [ sendToFrontend clientId (SendDocument doc)
+                    [ sendToFrontend clientId (SendDocument CanEdit doc)
                     , sendToFrontend clientId (SendMessage message)
                     ]
 
         SaveDocument currentUser document ->
             let
-                -- title =
-                --    Abstract.getItem document.language "title" document.content
+                --title =
+                --   Ab`stract.getItem document.language "title" document.content
                 documentDict =
                     Dict.insert document.id document model.documentDict
             in
             ( { model | documentDict = documentDict }, Cmd.none )
+
+        FetchDocumentById docId ->
+            case Dict.get docId model.documentDict of
+                Nothing ->
+                    ( model, sendToFrontend clientId (SendMessage "Couldn't find that document") )
+
+                Just document ->
+                    if document.public then
+                        ( model
+                        , Cmd.batch
+                            [ sendToFrontend clientId (SendDocument ReadOnly document)
+                            , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ document.publicId ++ ", id = " ++ document.id))
+                            ]
+                        )
+
+                    else
+                        ( model
+                        , Cmd.batch
+                            [ sendToFrontend clientId (SendMessage "Sorry, that document is not public")
+                            ]
+                        )
 
         GetDocumentByAuthorId authorId ->
             case Dict.get authorId model.authorIdDict of
@@ -194,9 +239,9 @@ updateFromFrontend sessionId clientId msg model =
                         Just doc ->
                             ( model
                             , Cmd.batch
-                                [ sendToFrontend clientId (SendDocument doc)
+                                [ sendToFrontend clientId (SendDocument CanEdit doc)
                                 , sendToFrontend clientId (SetShowEditor True)
-                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId))
+                                , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
                             )
 
@@ -213,59 +258,20 @@ updateFromFrontend sessionId clientId msg model =
                         Just doc ->
                             ( model
                             , Cmd.batch
-                                [ sendToFrontend clientId (SendDocument doc)
+                                [ sendToFrontend clientId (SendDocument ReadOnly doc)
                                 , sendToFrontend clientId (SetShowEditor False)
                                 , sendToFrontend clientId (SendMessage (Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id))
                                 ]
                             )
 
-        GetLinks ->
-            ( model, sendToFrontend clientId (GotLinks model.links) )
+        GetPublicDocuments ->
+            ( model, sendToFrontend clientId (GotPublicDocuments (searchForPublicDocuments "" model)) )
 
         StealDocument user id ->
             stealId user id model |> Cmd.Extra.withNoCmd
 
 
-sendDoc model clientId path =
-    case List.head (List.filter (\doc -> doc.publicId == String.dropLeft 3 path) model.documents) of
-        Nothing ->
-            ( model
-            , sendToFrontend clientId (SendMessage <| "Could not find document")
-            )
-
-        Just doc ->
-            ( model
-            , Cmd.batch
-                [ sendToFrontend clientId (SendDocument doc)
-                ]
-            )
-
-
-postDocumentToCurrentUser : Maybe User -> Document.Document -> Model -> Model
-postDocumentToCurrentUser maybeCurrentUser doc model =
-    case maybeCurrentUser of
-        Nothing ->
-            model
-
-        Just user ->
-            case Dict.get user.id model.usersDocumentsDict of
-                Nothing ->
-                    { model | usersDocumentsDict = Dict.insert user.id [ doc.id ] model.usersDocumentsDict }
-
-                Just docIdList ->
-                    { model | usersDocumentsDict = Dict.insert user.id (doc.id :: docIdList) model.usersDocumentsDict }
-
-
-makeLinks : Model -> Model
-makeLinks model =
-    let
-        links =
-            List.foldl (\docId acc -> makeLink docId model.documentDict model.abstractDict :: acc) [] (Dict.keys model.documentDict)
-    in
-    { model | links = Maybe.Extra.values links }
-
-
-makeLink : String -> DocumentDict -> AbstractDict -> Maybe { label : String, url : String }
+makeLink : String -> DocumentDict -> AbstractDict -> Maybe DocumentLink
 makeLink docId documentDict abstractDict =
     case ( Dict.get docId documentDict, Dict.get docId abstractDict ) of
         ( Nothing, _ ) ->
@@ -276,7 +282,7 @@ makeLink docId documentDict abstractDict =
 
         ( Just doc, Just abstr ) ->
             if doc.public then
-                Just { label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
+                Just { digest = abstr.digest, label = abstr.title, url = Config.appUrl ++ "/p/" ++ doc.publicId }
 
             else
                 Nothing
@@ -345,7 +351,7 @@ updateAbstracts model =
         abstractDict =
             List.foldl (\id runningAbstractDict -> putAbstract id model.documentDict runningAbstractDict) model.abstractDict ids
     in
-    { model | abstractDict = abstractDict }
+    { model | abstractDict = Backend.Update.updateAbstracts model.documentDict model.abstractDict }
 
 
 stealId : User -> String -> Model -> Model
@@ -378,3 +384,61 @@ getAbstract documentDict id =
 
         Just doc ->
             Abstract.get doc.language doc.content
+
+
+searchInAbstract : String -> Abstract -> Bool
+searchInAbstract key abstract =
+    String.contains key abstract.title
+
+
+filterDict : (value -> Bool) -> Dict comparable value -> List ( comparable, value )
+filterDict predicate dict =
+    let
+        filter key_ dict_ =
+            case Dict.get key_ dict_ of
+                Nothing ->
+                    Nothing
+
+                Just value ->
+                    if predicate value then
+                        Just ( key_, value )
+
+                    else
+                        Nothing
+
+        add key_ dict_ list_ =
+            case filter key_ dict_ of
+                Nothing ->
+                    list_
+
+                Just item ->
+                    item :: list_
+    in
+    List.foldl (\key list_ -> add key dict list_) [] (Dict.keys dict)
+
+
+searchForPublicDocuments : String -> Model -> List Document.Document
+searchForPublicDocuments key model =
+    searchForDocuments key model |> List.filter (\doc -> doc.public)
+
+
+searchForUserDocuments : Maybe String -> String -> Model -> List Document.Document
+searchForUserDocuments maybeUsername key model =
+    case maybeUsername of
+        Nothing ->
+            []
+
+        Just username ->
+            searchForDocuments key model |> List.filter (\doc -> doc.author == Just username)
+
+
+searchForDocuments : String -> Model -> List Document.Document
+searchForDocuments key model =
+    let
+        ids =
+            Dict.toList model.abstractDict
+                |> List.map (\( id, abstr ) -> ( abstr.digest, id ))
+                |> List.filter (\( dig, _ ) -> String.contains (String.toLower key) dig)
+                |> List.map (\( _, id ) -> id)
+    in
+    List.foldl (\id acc -> Dict.get id model.documentDict :: acc) [] ids |> Maybe.Extra.values

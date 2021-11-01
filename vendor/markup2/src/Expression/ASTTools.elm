@@ -7,9 +7,10 @@ module Expression.ASTTools exposing
     , filterBlockByName
     , filterStrictBlock
     , getHeadings
+    , getItem
     , getText
-    , getTitle
     , listExprMToString
+    , reverseContents
     , stringContentOfNamedBlock
     , stringValue
     , stringValueOfList
@@ -110,11 +111,24 @@ exprMToString text =
             str
 
 
-getTitle : List Block -> Maybe String
-getTitle blocks =
+reverseContents : ExprM -> ExprM
+reverseContents expr =
+    case expr of
+        ExprM name textList meta ->
+            ExprM name (List.reverse textList) meta
+
+        ArgM textList meta ->
+            ArgM (List.reverse textList) meta
+
+        _ ->
+            expr
+
+
+getItem : String -> List Block -> Maybe String
+getItem name blocks =
     let
         result =
-            filterStrictBlock Equality "title" blocks
+            filterStrictBlock Equality name blocks
     in
     if result == "" then
         Nothing
@@ -154,14 +168,14 @@ filter_ filterType key block =
             case filterType of
                 Equality ->
                     if key == name then
-                        [ ExprM name (List.map extractContents blocks |> List.concat) { id = "??", loc = { begin = { row = 0, col = 0 }, end = { row = 0, col = 0 } } } ]
+                        [ ExprM name (List.map extractContents blocks |> List.concat) { id = "??", loc = { begin = { row = 0, col = 0 }, end = { row = 0, col = 0 } }, label = "" } ]
 
                     else
                         []
 
                 Contains ->
                     if String.contains key name then
-                        [ ExprM name (List.map extractContents blocks |> List.concat) { id = "??", loc = { begin = { row = 0, col = 0 }, end = { row = 0, col = 0 } } } ]
+                        [ ExprM name (List.map extractContents blocks |> List.concat) { id = "??", loc = { begin = { row = 0, col = 0 }, end = { row = 0, col = 0 } }, label = "" } ]
 
                     else
                         []

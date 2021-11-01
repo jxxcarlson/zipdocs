@@ -11,6 +11,7 @@ import Html.Attributes as HtmlAttr exposing (attribute)
 import Html.Events
 import Json.Decode
 import Markup.API
+import Render.Msg
 import String.Extra
 import Types exposing (..)
 import View.Button as Button
@@ -127,6 +128,10 @@ viewRenderedContainer model =
 
 viewMydocs : Model -> Int -> Element FrontendMsg
 viewMydocs model deltaH =
+    let
+        docs =
+            List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents
+    in
     E.column
         [ E.width (E.px <| indexWidth model.windowWidth)
         , E.height (E.px (appHeight_ model - deltaH))
@@ -137,15 +142,16 @@ viewMydocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "My Docs")
-            :: viewDocsAsLinks model.currentDocument
-                (List.sortBy (\doc -> softTruncate softTruncateLimit doc.title) model.documents)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text <| "My Docs (" ++ String.fromInt (List.length docs) ++ ")")
+            :: viewDocumentsInIndex CanEdit
+                model.currentDocument
+                docs
         )
 
 
-viewDocsAsLinks : Maybe Document -> List Document -> List (Element FrontendMsg)
-viewDocsAsLinks currentDocument docs =
-    List.map (Button.setDocumentAsCurrent currentDocument) docs
+viewDocumentsInIndex : DocPermissions -> Maybe Document -> List Document -> List (Element FrontendMsg)
+viewDocumentsInIndex docPermissions currentDocument docs =
+    List.map (Button.setDocumentAsCurrent docPermissions currentDocument) docs
 
 
 viewZipdocs model deltaH =
@@ -159,7 +165,7 @@ viewZipdocs model deltaH =
         , Font.color (E.rgb 0.1 0.1 1.0)
         , E.spacing 8
         ]
-        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text "Published Zipdocs") :: viewLinks model)
+        (E.el [ Font.size 16, Font.color (E.rgb 0.1 0.1 0.1) ] (E.text <| "Published Zipdocs (" ++ String.fromInt (List.length model.publicDocuments) ++ ")") :: viewPublicDocuments model)
 
 
 footer model width_ =
@@ -172,7 +178,10 @@ footer model width_ =
         ]
         [ Button.exportToLaTeX
         , Button.printToPDF model
-        , View.Utility.showIf (isAdmin model) Button.runSpecial
+
+        -- , View.Utility.showIf (isAdmin model) Button.runSpecial
+        , View.Utility.showIf (isAdmin model) Button.exportJson
+        , View.Utility.showIf (isAdmin model) Button.importJson
 
         -- , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
         , messageRow model (width_ - 10)
@@ -212,13 +221,15 @@ header model width_ =
     E.row [ E.spacing 12, E.width E.fill ]
         [ Button.newDocument
         , View.Utility.showIf model.showEditor Button.closeEditor
-        , View.Utility.hideIf (model.currentUser == Nothing || model.showEditor) Button.openEditor
+        , View.Utility.hideIf (model.currentUser == Nothing || model.permissions == ReadOnly || model.showEditor) Button.openEditor
         , Button.miniLaTeXLanguageButton model
         , Button.markupLanguageButton model
         , View.Utility.showIf model.showEditor (Button.togglePublic model.currentDocument)
 
         -- , Button.l1LanguageButton model
-        , wordCount model
+        , View.Utility.showIf model.showEditor (wordCount model)
+        , E.el [ Font.size 14, Font.color (E.rgb 0.9 0.9 0.9) ] (E.text (currentAuthor model.currentDocument))
+        , View.Input.searchDocsInput model
         , View.Utility.showIf (model.currentUser == Nothing) Button.signIn
         , View.Utility.showIf (model.currentUser == Nothing) (View.Input.usernameInput model)
         , View.Utility.showIf (model.currentUser == Nothing) (View.Input.passwordInput model)
@@ -227,6 +238,16 @@ header model width_ =
         -- , Button.help
         , E.el [ E.alignRight ] (title Config.appName)
         ]
+
+
+currentAuthor : Maybe Document -> String
+currentAuthor maybeDoc =
+    case maybeDoc of
+        Nothing ->
+            ""
+
+        Just doc ->
+            doc.author |> Maybe.withDefault ""
 
 
 wordCount : Model -> Element FrontendMsg
@@ -264,7 +285,7 @@ viewEditor_ model width_ =
                 , Background.color (E.rgb255 240 241 255)
                 ]
                 { onChange = InputText
-                , text = doc.content
+                , text = model.sourceText
                 , placeholder = Nothing
                 , label = Input.labelHidden "Enter source text here"
                 , spellcheck = False
@@ -290,19 +311,19 @@ viewRendered model width_ =
                 ]
                 [ View.Utility.katexCSS
                 , E.column [ E.spacing 18, E.width (E.px (width_ - 60)) ]
-                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content))
+                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content) |> List.map (E.map Render))
 
                 --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
                 ]
 
 
-viewLinks : Model -> List (Element FrontendMsg)
-viewLinks model =
-    List.map viewLink (List.sortBy (\l -> l.label) model.links)
+viewPublicDocuments : Model -> List (Element FrontendMsg)
+viewPublicDocuments model =
+    viewDocumentsInIndex ReadOnly model.currentDocument model.publicDocuments
 
 
-viewLink : DocumentLink -> Element FrontendMsg
-viewLink docLink =
+viewPublicDocument : DocumentLink -> Element FrontendMsg
+viewPublicDocument docLink =
     E.newTabLink [] { url = docLink.url, label = E.el [] (E.text (softTruncate softTruncateLimit docLink.label)) }
 
 

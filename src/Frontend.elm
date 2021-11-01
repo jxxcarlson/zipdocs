@@ -1,15 +1,20 @@
 module Frontend exposing (..)
 
 import Authentication
+import Backend.Backup
 import Browser exposing (UrlRequest(..))
 import Browser.Events
 import Browser.Navigation as Nav
 import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Config
 import Data
+import Debounce exposing (Debounce)
 import Docs
 import Document exposing (Access(..))
+import Expression.ASTTools
+import File
 import File.Download as Download
+import File.Select as Select
 import Frontend.Cmd
 import Frontend.PDF as PDF
 import Frontend.Update
@@ -20,6 +25,7 @@ import Lang.Lang as Lang exposing (Lang(..))
 import List.Extra
 import Markup.API
 import Process
+import Render.Msg exposing (MarkupMsg(..))
 import Task
 import Types exposing (..)
 import Url exposing (Url)
@@ -74,18 +80,28 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , permissions = ReadOnly
+      , sourceText = ""
+      , debounce = Debounce.init
       , counter = 0
-      , inputSearchKey = initialSearchKey url
+      , inputSearchKey = ""
       , authorId = ""
       , documents = []
       , currentDocument = Just Docs.notSignedIn
       , printingState = PrintWaiting
       , documentDeleteState = WaitingForDeleteAction
       , language = Lang.MiniLaTeX
-      , links = []
+      , publicDocuments = []
       }
-    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetLinks ]
+    , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetPublicDocuments ]
     )
+
+
+debounceConfig : Debounce.Config FrontendMsg
+debounceConfig =
+    { strategy = Debounce.soon 300
+    , transform = DebounceMsg
+    }
 
 
 urlAction path =
@@ -112,15 +128,6 @@ urlAction path =
 
             _ ->
                 Cmd.none
-
-
-initialSearchKey : Url -> String
-initialSearchKey url =
-    if urlIsForGuest url then
-        ":public"
-
-    else
-        ":me"
 
 
 urlIsForGuest : Url -> Bool
@@ -193,6 +200,23 @@ update msg model =
             )
 
         -- ADMIN
+        ExportJson ->
+            ( model, sendToBackend GetBackupData )
+
+        JsonRequested ->
+            ( model, Select.file [ "text/json" ] JsonSelected )
+
+        JsonSelected file ->
+            ( model, Task.perform JsonLoaded (File.toString file) )
+
+        JsonLoaded jsonImport ->
+            case Backend.Backup.decodeBackup jsonImport of
+                Err _ ->
+                    ( { model | message = "Error decoding backup" }, Cmd.none )
+
+                Ok backendModel ->
+                    ( { model | message = "restoring backup ..." }, sendToBackend (RestoreBackup backendModel) )
+
         InputSpecial str ->
             { model | inputSpecial = str } |> withNoCmd
 
@@ -236,7 +260,7 @@ update msg model =
             ( model, Cmd.none )
 
         CloseEditor ->
-            ( { model | showEditor = False }, sendToBackend GetLinks )
+            ( { model | showEditor = False }, sendToBackend GetPublicDocuments )
 
         OpenEditor ->
             ( { model | showEditor = True }, Cmd.none )
@@ -245,32 +269,46 @@ update msg model =
             ( model, sendToBackend (GetDocumentByAuthorId docId) )
 
         -- DOCUMENT
-        InputText str ->
-            case model.currentDocument of
-                Nothing ->
+        Render msg_ ->
+            case msg_ of
+                Render.Msg.SendMeta m ->
                     ( model, Cmd.none )
 
-                Just doc ->
-                    let
-                        parseData =
-                            Markup.API.parse doc.language model.counter (String.lines doc.content)
+                GetPublicDocument id ->
+                    ( model, sendToBackend (FetchDocumentById id) )
 
-                        newTitle =
-                            Markup.API.getTitle parseData.ast |> Maybe.withDefault "Untitled"
+        DebounceMsg msg_ ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceConfig
+                        (Debounce.takeLast save)
+                        msg_
+                        model.debounce
+            in
+            ( { model | debounce = debounce }
+            , cmd
+            )
 
-                        newDocument =
-                            { doc | content = str, title = newTitle }
+        Saved str ->
+            updateDoc model str
 
-                        documents =
-                            List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
-                    in
-                    ( { model
-                        | currentDocument = Just newDocument
-                        , counter = model.counter + 1
-                        , documents = documents
-                      }
-                    , sendToBackend (SaveDocument model.currentUser newDocument)
-                    )
+        Search ->
+            ( model, sendToBackend (SearchForDocuments (model.currentUser |> Maybe.map .username) model.inputSearchKey) )
+
+        InputText str ->
+            -- updateDoc model str
+            let
+                -- Push your values here.
+                ( debounce, cmd ) =
+                    Debounce.push debounceConfig str model.debounce
+            in
+            ( { model
+                | sourceText = str
+                , debounce = debounce
+              }
+            , cmd
+            )
 
         InputAuthorId str ->
             ( { model | authorId = str }, Cmd.none )
@@ -287,8 +325,15 @@ update msg model =
         NewDocument ->
             Frontend.Update.newDocument model
 
-        SetDocumentAsCurrent doc ->
-            ( { model | currentDocument = Just doc, message = Config.appUrl ++ "/p/" ++ doc.publicId }, Cmd.none )
+        SetDocumentAsCurrent permissions doc ->
+            ( { model
+                | currentDocument = Just doc
+                , sourceText = doc.content
+                , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
+                , permissions = setPermissions model.currentUser permissions doc
+              }
+            , Cmd.none
+            )
 
         SetLanguage lang ->
             ( { model | language = lang }, Cmd.none )
@@ -338,6 +383,52 @@ update msg model =
 
         FinallyDoCleanPrintArtefacts privateId ->
             ( model, Cmd.none )
+
+
+setPermissions currentUser permissions document =
+    case document.author of
+        Nothing ->
+            permissions
+
+        Just author ->
+            if Just author == Maybe.map .username currentUser then
+                CanEdit
+
+            else
+                permissions
+
+
+save : String -> Cmd FrontendMsg
+save s =
+    Task.perform Saved (Task.succeed s)
+
+
+updateDoc model str =
+    case model.currentDocument of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just doc ->
+            let
+                parseData =
+                    Markup.API.parse doc.language model.counter (String.lines doc.content)
+
+                newTitle =
+                    Expression.ASTTools.getItem "title" parseData.ast |> Maybe.withDefault "Untitled"
+
+                newDocument =
+                    { doc | content = str, title = newTitle }
+
+                documents =
+                    List.Extra.setIf (\d -> d.id == newDocument.id) newDocument model.documents
+            in
+            ( { model
+                | currentDocument = Just newDocument
+                , counter = model.counter + 1
+                , documents = documents
+              }
+            , sendToBackend (SaveDocument model.currentUser newDocument)
+            )
 
 
 changePrintingState printingState doc =
@@ -399,23 +490,42 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         -- DOCUMENT
-        SendDocument doc ->
+        SendDocument access doc ->
             let
                 documents =
                     Util.insertInList doc model.documents
 
                 message =
                     "Documents: " ++ String.fromInt (List.length documents)
-            in
-            ( { model | currentDocument = Just doc, language = doc.language, documents = documents }, Cmd.none )
 
-        GotLinks links ->
-            ( { model | links = links }, Cmd.none )
+                showEditor =
+                    case access of
+                        ReadOnly ->
+                            False
+
+                        CanEdit ->
+                            True
+            in
+            ( { model
+                | sourceText = doc.content
+                , showEditor = showEditor
+                , currentDocument = Just doc
+                , language = doc.language
+                , documents = documents
+              }
+            , Cmd.none
+            )
+
+        GotPublicDocuments publicDocuments ->
+            ( { model | publicDocuments = publicDocuments }, Cmd.none )
 
         SendMessage message ->
             ( { model | message = message }, Cmd.none )
 
         -- ADMIN
+        SendBackupData data ->
+            ( { model | message = "Backup data: " ++ String.fromInt (String.length data) ++ " chars" }, Download.string "zipdocs.json" "text/json" data )
+
         StatusReport items ->
             ( { model | statusReport = items }, Cmd.none )
 
