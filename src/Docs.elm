@@ -34,11 +34,9 @@ documents, and you don't have to keep track of document links.
 
 When you click on \\strong{New} to make a new document, you will get two links, which you will find in the footer of this app. The  first is private;
 use it to  edit your document in the future.  If you are using the no-login option, keep this link safe!
-There is no way to recover it.
-
-The second link is to share with colleagues and
+There is no way to recover it.  The second link is to share with colleagues and
 friends.  With it anyone can read your document but not
-edit it.  Look in the footer of the app for the links.
+edit it.
 
 Documents are automatically saved as you edit.
 
