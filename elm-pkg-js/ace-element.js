@@ -57,7 +57,7 @@ window.customElements.define("ace-editor", class AceEditor extends HTMLElement {
     // List of observed attributes
     static get observedAttributes() {
         return ["theme", "mode", "fontsize", "softtabs", "tabsize", "readonly", "placeholder",
-            "wrapmode", "min-lines", "max-lines", "line-numbers", "shadow-style", "text"]
+            "wrapmode", "min-lines", "max-lines", "line-numbers", "shadow-style", "text", "linenumber"]
     }
 
     // Fires when an instance of the element is created
@@ -112,6 +112,7 @@ window.customElements.define("ace-editor", class AceEditor extends HTMLElement {
             editor.getSession().on("change", (event) => {
                 element.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: event }))
             })
+
         }
 
         // Handle theme changes
@@ -119,7 +120,9 @@ window.customElements.define("ace-editor", class AceEditor extends HTMLElement {
 
         // Initial attributes
         editor.setOption("printMargin", false)
+        // editor.setOption("highlightActiveLine", true)
         editor.setTheme(this.getAttribute("theme"))
+        // editor.setTheme('ace/theme/tomorrow_night')
         editor.setFontSize(Number(this.getAttribute("fontsize")) || 16)
         editor.setReadOnly(this.hasAttribute("readonly"))
         let session = editor.getSession()
@@ -135,6 +138,12 @@ window.customElements.define("ace-editor", class AceEditor extends HTMLElement {
         if (this.hasAttribute("placeholder")) {
             editor.setOption("placeholder", this.getAttribute("placeholder"))
         }
+        // EXPERIMENTAL, NOT WORKING
+//        if (this.hasAttribute("linenumber")) {
+//                    var linenumber = this.getAttribute("linenumber")
+//                    this.editor.scrollToLine(100, true, true, function () {});
+//                    this.editor.gotoLine(100, 0, true);
+//                }
 
         // non-Ace specific
         if (this.hasAttribute("shadow-style")) {
@@ -162,11 +171,17 @@ window.customElements.define("ace-editor", class AceEditor extends HTMLElement {
         this._attached = false
     }
 
+
+
     attributeChangedCallback(attr, oldVal, newVal) {
         if (!this._attached) {
             return false
         }
         switch (attr) {
+            case "linenumber":
+               this.editor.scrollToLine(newVal, true, true, function () {});
+               this.editor.gotoLine(newVal, 0, true);
+               break
             case "theme":
                 this.editor.setTheme(newVal)
                 break
