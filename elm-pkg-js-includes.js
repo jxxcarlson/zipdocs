@@ -3,7 +3,7 @@
 // In future this will be more structured + restricted once the design is done
 const elm_katex= require('./elm-pkg-js/elm-katex.js')
 const ace_element= require('./elm-pkg-js/ace-element.js')
-const ace= require('./elm-pkg-js/ace.js')
+// const ace= require('./elm-pkg-js/ace.js')
 
 exports.init = async function init(app) {
   // @WARNING: this only runs for Lamdera production deploys!
