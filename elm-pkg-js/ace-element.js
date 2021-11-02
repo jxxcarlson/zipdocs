@@ -6,11 +6,11 @@
 exports.init = async function(app) {
 
     console.log("I am starting ace-element: init");
-    var ace = document.createElement('script')
-    ace.type = 'text/javascript'
-    ace.src ="/js/ace.js"
-    ace.onload = initAce
-    document.head.appendChild(ace);
+    var aceJs = document.createElement('script')
+    aceJs.type = 'text/javascript'
+    aceJs.src ="/js/ace.js"
+    aceJs.onload = initAce
+    document.head.appendChild(aceJs);
     console.log("ace-element: I have appended ace to document.head");
 
 
