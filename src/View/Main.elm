@@ -31,18 +31,40 @@ view model =
 
 mainColumn : Model -> Element FrontendMsg
 mainColumn model =
-    if model.showEditor then
-        viewEditorAndRenderedText model
+    case model.appMode of
+        AdminMode ->
+            viewAdmin model
 
-    else if model.statusReport == [] then
-        viewRenderedTextOnly model
+        UserMode ->
+            if model.showEditor then
+                viewEditorAndRenderedText model
 
-    else
-        viewStatusReport model
+            else if model.statusReport == [] then
+                viewRenderedTextOnly model
+
+            else
+                viewStatusReport model
 
 
 
 -- TOP
+
+
+viewAdmin : Model -> Element FrontendMsg
+viewAdmin model =
+    E.column (mainColumnStyle model)
+        [ E.column [ E.spacing 12, E.centerX, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
+            [ header model (E.px <| appWidth model.windowWidth)
+            , E.row [ E.spacing 12 ]
+                [ View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
+                , Button.runSpecial
+                , Button.toggleAppMode model
+                , Button.exportJson
+                , View.Utility.showIf (isAdmin model) Button.importJson
+                ]
+            , footer model (appWidth model.windowWidth)
+            ]
+        ]
 
 
 viewEditorAndRenderedText : Model -> Element FrontendMsg
@@ -150,11 +172,12 @@ footer model width_ =
         , Button.printToPDF model
 
         -- , View.Utility.showIf (isAdmin model) Button.runSpecial
-        , View.Utility.showIf (isAdmin model) Button.exportJson
-        , View.Utility.showIf (isAdmin model) Button.importJson
+        , View.Utility.showIf (isAdmin model) (Button.toggleAppMode model)
 
+        -- , View.Utility.showIf (isAdmin model) Button.exportJson
+        --, View.Utility.showIf (isAdmin model) Button.importJson
         -- , View.Utility.showIf (isAdmin model) (View.Input.specialInput model)
-        , messageRow model (width_ - 10)
+        , messageRow model
         ]
 
 
@@ -176,9 +199,9 @@ isAdmin model =
     Maybe.map .username model.currentUser == Just "jxxcarlson"
 
 
-messageRow model width_ =
+messageRow model =
     E.row
-        [ E.width (E.px (width_ - 200))
+        [ E.width E.fill
         , E.height (E.px 30)
         , E.paddingXY 8 4
         , View.Style.bgGray 0.1

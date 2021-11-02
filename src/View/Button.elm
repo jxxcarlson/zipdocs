@@ -20,6 +20,7 @@ module View.Button exposing
     , signIn
     , signOut
     , startupHelp
+    , toggleAppMode
     , toggleEditor
     , togglePublic
     )
@@ -267,6 +268,16 @@ togglePublic maybeDoc =
 
                 True ->
                     buttonTemplate [] (SetPublic doc False) "Public"
+
+
+toggleAppMode : FrontendModel -> Element FrontendMsg
+toggleAppMode model =
+    case model.appMode of
+        UserMode ->
+            buttonTemplate [] (SetAppMode AdminMode) "User Mode"
+
+        AdminMode ->
+            buttonTemplate [] (SetAppMode UserMode) "Admin Mode"
 
 
 

@@ -34,6 +34,7 @@ type alias FrontendModel =
     , inputPassword : String
 
     -- UI
+    , appMode : AppMode
     , windowWidth : Int
     , windowHeight : Int
     , popupStatus : PopupStatus
@@ -53,6 +54,11 @@ type alias FrontendModel =
     , counter : Int
     , publicDocuments : List Document
     }
+
+
+type AppMode
+    = UserMode
+    | AdminMode
 
 
 type PopupWindow
@@ -149,6 +155,7 @@ type FrontendMsg
     | UrlChanged Url
     | NoOpFrontendMsg
       -- UI
+    | SetAppMode AppMode
     | GotNewWindowDimensions Int Int
     | GotViewport Dom.Viewport
     | SetViewPortForElement (Result Dom.Error ( Dom.Element, Dom.Viewport ))

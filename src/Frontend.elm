@@ -74,6 +74,7 @@ init url key =
       , inputPassword = ""
 
       -- UI
+      , appMode = UserMode
       , windowWidth = 600
       , windowHeight = 900
       , popupStatus = PopupClosed
@@ -239,6 +240,9 @@ update msg model =
             ( { model | inputPassword = str }, Cmd.none )
 
         -- UI
+        SetAppMode appMode ->
+            ( { model | appMode = appMode }, Cmd.none )
+
         GotNewWindowDimensions w h ->
             ( { model | windowWidth = w, windowHeight = h }, Cmd.none )
 
