@@ -5,8 +5,10 @@ module Markup.API exposing
     , p
     , parse
     , prepareForExport
+    , q
     , render
     , renderFancy
+    , renderFancyFromParseData
     , rl
     , tableOfContents
     )
@@ -44,6 +46,11 @@ defaultSettings =
 p : Lang -> String -> List Simplify.BlockS
 p lang str =
     parse lang 0 (String.lines str) |> .ast |> Simplify.blocks
+
+
+q : Lang -> String -> List Block
+q lang str =
+    parse lang 0 (String.lines str) |> .ast
 
 
 rl : String -> List (Element MarkupMsg)
@@ -187,10 +194,12 @@ labelForName str accumulator =
 
 renderFancy : Render.Settings.Settings -> Lang -> Int -> List String -> List (Element MarkupMsg)
 renderFancy settings language count source =
-    let
-        parseData =
-            parse language count source
+    renderFancyFromParseData (parse language count source) settings count
 
+
+renderFancyFromParseData : { ast : List Block, accumulator : Accumulator } -> Settings -> Int -> List (Element MarkupMsg)
+renderFancyFromParseData parseData settings count =
+    let
         ast =
             parseData.ast
 
