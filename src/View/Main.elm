@@ -7,6 +7,9 @@ import Element.Background as Background
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import Html.Attributes as HtmlAttr exposing (attribute)
+import Html.Events
+import Json.Decode
 import Markup.API
 import Render.Msg
 import String.Extra
@@ -73,13 +76,40 @@ viewEditorAndRenderedText model =
         [ E.column [ E.spacing 12, E.centerX, E.width (E.px <| appWidth model.windowWidth), E.height (E.px (appHeight_ model)) ]
             [ header model (E.px <| appWidth model.windowWidth)
             , E.row [ E.spacing 12 ]
-                [ viewEditor model (panelWidth_ model.windowWidth)
+                [ -- viewEditor model (panelWidth_ model.windowWidth)
+                  aceEditor model
                 , viewRendered model (panelWidth_ model.windowWidth)
                 , viewMydocs model 110
                 ]
             , footer model (appWidth model.windowWidth)
             ]
         ]
+
+
+aceEditor : Model -> Element FrontendMsg
+aceEditor model =
+    let
+        onChange : Html.Attribute FrontendMsg
+        onChange =
+            Json.Decode.string
+                |> Json.Decode.at [ "target", "editorText" ]
+                |> Json.Decode.map InputText
+                |> Html.Events.on "change"
+    in
+    E.el [ E.htmlAttribute onChange ] <|
+        E.html <|
+            Html.node "ace-editor"
+                [ HtmlAttr.attribute "theme" "twilight"
+                , HtmlAttr.attribute "wrapmode" "true"
+                , HtmlAttr.attribute "tabsize" "2"
+                , HtmlAttr.attribute "softtabs" "true"
+                , HtmlAttr.attribute "navigateWithinSoftTabs" "true"
+                , HtmlAttr.attribute "fontsize" "12"
+                , HtmlAttr.style "height" (String.fromInt (panelHeight_ model) ++ "px")
+                , HtmlAttr.style "width" (String.fromInt (panelWidth_ model.windowWidth) ++ "px")
+                , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
+                ]
+                []
 
 
 
