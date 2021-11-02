@@ -102,6 +102,7 @@ aceEditor model =
                 [ HtmlAttr.attribute "theme" "twilight"
                 , HtmlAttr.attribute "wrapmode" "true"
                 , HtmlAttr.attribute "tabsize" "2"
+                , HtmlAttr.attribute "linenumber" (String.fromInt (model.lineNumber + 1))
                 , HtmlAttr.attribute "softtabs" "true"
                 , HtmlAttr.attribute "navigateWithinSoftTabs" "true"
                 , HtmlAttr.attribute "fontsize" "12"

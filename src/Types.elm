@@ -42,6 +42,7 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , lineNumber : Int
     , permissions : DocPermissions
     , debounce : Debounce String
     , sourceText : String

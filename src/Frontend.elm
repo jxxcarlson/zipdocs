@@ -81,6 +81,7 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , lineNumber = 0
       , permissions = ReadOnly
       , sourceText = ""
       , debounce = Debounce.init
@@ -276,7 +277,7 @@ update msg model =
         Render msg_ ->
             case msg_ of
                 Render.Msg.SendMeta m ->
-                    ( model, Cmd.none )
+                    ( { model | lineNumber = m.loc.begin.row, message = "line " ++ String.fromInt (m.loc.begin.row + 1) }, Cmd.none )
 
                 GetPublicDocument id ->
                     ( model, sendToBackend (FetchDocumentById id) )
