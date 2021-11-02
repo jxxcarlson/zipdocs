@@ -82,6 +82,7 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , selectedId = ""
       , parseData = { ast = [], accumulator = Block.Accumulator.init 4 }
       , searchCount = 0
       , searchSourceText = ""
@@ -257,10 +258,10 @@ update msg model =
         SetViewPortForElement result ->
             case result of
                 Ok ( element, viewport ) ->
-                    ( model, View.Utility.setViewPortForSelectedLine element viewport )
+                    ( { model | message = "setting viewport" }, View.Utility.setViewPortForSelectedLine element viewport )
 
                 Err _ ->
-                    ( model, Cmd.none )
+                    ( { model | message = "could not set viewport" }, Cmd.none )
 
         InputSearchSource str ->
             ( { model | searchSourceText = str }, Cmd.none )
@@ -270,15 +271,21 @@ update msg model =
                 ids =
                     Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast
 
-                cmd =
+                ( cmd, id ) =
                     case List.head ids of
                         Nothing ->
-                            Cmd.none
+                            ( Cmd.none, "(no-id)" )
 
-                        Just id ->
-                            View.Utility.setViewportForElement (id ++ ".0")
+                        Just id_ ->
+                            ( View.Utility.setViewportForElement (id_ ++ ".0"), id_ ++ ".0" )
             in
-            ( { model | searchCount = model.searchCount + 1, message = Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast |> String.join ", " }, cmd )
+            ( { model
+                | selectedId = id
+                , searchCount = model.searchCount + 1
+                , message = ids |> String.join ", "
+              }
+            , cmd
+            )
 
         ChangePopupStatus status ->
             ( { model | popupStatus = status }, Cmd.none )
@@ -356,6 +363,7 @@ update msg model =
             ( { model
                 | currentDocument = Just doc
                 , sourceText = doc.content
+                , parseData = Markup.API.parse model.language model.counter (String.lines doc.content)
                 , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
                 , permissions = setPermissions model.currentUser permissions doc
               }
@@ -451,6 +459,7 @@ updateDoc model str =
             in
             ( { model
                 | currentDocument = Just newDocument
+                , parseData = parseData
                 , counter = model.counter + 1
                 , documents = documents
               }

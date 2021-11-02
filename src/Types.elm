@@ -43,6 +43,7 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , selectedId : String
     , parseData : ParseData
     , sourceText : String
     , searchCount : Int

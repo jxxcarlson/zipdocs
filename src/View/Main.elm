@@ -349,7 +349,7 @@ viewRendered model width_ =
                 ]
                 [ View.Utility.katexCSS
                 , E.column [ E.spacing 18, E.width (E.px (width_ - 60)) ]
-                    (Markup.API.renderFancy settings doc.language model.counter (String.lines doc.content) |> List.map (E.map Render))
+                    (Markup.API.renderFancy (settings model.selectedId) doc.language model.counter (String.lines doc.content) |> List.map (E.map Render))
 
                 --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
                 ]
@@ -382,13 +382,14 @@ softTruncate k str =
             str2 ++ " ..."
 
 
-settings : Markup.API.Settings
-settings =
+settings : String -> Markup.API.Settings
+settings selectedId =
     { width = 500
     , titleSize = 30
     , showTOC = True
     , showErrorMessages = True
     , paragraphSpacing = 14
+    , selectedId = selectedId
     }
 
 

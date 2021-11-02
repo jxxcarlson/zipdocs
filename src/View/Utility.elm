@@ -59,6 +59,16 @@ setViewportForElement id =
         |> Task.attempt Types.SetViewPortForElement
 
 
+
+--setViewPortForSelectedLine : Dom.Element -> Dom.Viewport -> Cmd FrontendMsg
+--setViewPortForSelectedLine element viewport =
+--    let
+--        y =
+--            viewport.viewport.y + element.element.y - element.element.height - 100
+--    in
+--    Task.attempt (\_ -> Types.NoOpFrontendMsg) (Dom.setViewportOf "__RENDERED_TEXT__" 0 y)
+
+
 setViewPortForSelectedLine : Dom.Element -> Dom.Viewport -> Cmd FrontendMsg
 setViewPortForSelectedLine element viewport =
     let
