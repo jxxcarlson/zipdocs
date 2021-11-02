@@ -1,9 +1,17 @@
-// This implementation is based on http://juicy.github.io/juicy-ace-editor/ 
+// This implementation is based on http://juicy.github.io/juicy-ace-editor/
 // and https://github.com/LostInBrittany/ace-widget
 
 // Search: https://stackoverflow.com/questions/26555492/ace-editor-find-text-select-row-and-replace-text
 
-exports.init =  async function(app) {
+exports.init = async function(app) {
+
+    console.log("I am starting ace-element: init");
+    var ace = document.createElement('script')
+    ace.type = 'text/javascript'
+    ace.src ="/js/ace.js"
+    document.head.appendChild(ace);
+    console.log("ace-element: I have appended to document.head");
+
     let template = document.createElement("template")
     template.innerHTML = `
         <style>
