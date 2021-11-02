@@ -276,7 +276,7 @@ update msg model =
                             Cmd.none
 
                         Just id ->
-                            View.Utility.setViewportForElement (id ++ ".0" |> Debug.log "ID")
+                            View.Utility.setViewportForElement (id ++ ".0")
             in
             ( { model | searchCount = model.searchCount + 1, message = Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast |> String.join ", " }, cmd )
 
