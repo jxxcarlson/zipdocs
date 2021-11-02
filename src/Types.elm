@@ -12,6 +12,7 @@ import Document exposing (Document)
 import File exposing (File)
 import Http
 import Lang.Lang
+import Markup.API exposing (ParseData)
 import Random
 import Render.Msg
 import Time
@@ -42,10 +43,13 @@ type alias FrontendModel =
     , authorId : String
 
     -- DOCUMENT
+    , parseData : ParseData
+    , sourceText : String
+    , searchCount : Int
+    , searchSourceText : String
     , lineNumber : Int
     , permissions : DocPermissions
     , debounce : Debounce String
-    , sourceText : String
     , currentDocument : Maybe Document
     , documents : List Document
     , language : Lang.Lang.Lang
@@ -176,6 +180,8 @@ type FrontendMsg
     | InputUsername String
     | InputPassword String
       -- DOC
+    | InputSearchSource String
+    | SyncLR
     | Render Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg

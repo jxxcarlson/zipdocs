@@ -2,6 +2,7 @@ module Frontend exposing (..)
 
 import Authentication
 import Backend.Backup
+import Block.Accumulator
 import Browser exposing (UrlRequest(..))
 import Browser.Events
 import Browser.Navigation as Nav
@@ -81,6 +82,9 @@ init url key =
       , showEditor = False
 
       -- DOCUMENT
+      , parseData = { ast = [], accumulator = Block.Accumulator.init 4 }
+      , searchCount = 0
+      , searchSourceText = ""
       , lineNumber = 0
       , permissions = ReadOnly
       , sourceText = ""
@@ -257,6 +261,24 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        InputSearchSource str ->
+            ( { model | searchSourceText = str }, Cmd.none )
+
+        SyncLR ->
+            let
+                ids =
+                    Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast
+
+                cmd =
+                    case List.head ids of
+                        Nothing ->
+                            Cmd.none
+
+                        Just id ->
+                            View.Utility.setViewportForElement (id ++ ".0" |> Debug.log "ID")
+            in
+            ( { model | searchCount = model.searchCount + 1, message = Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast |> String.join ", " }, cmd )
 
         ChangePopupStatus status ->
             ( { model | popupStatus = status }, Cmd.none )

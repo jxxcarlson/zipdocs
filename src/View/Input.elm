@@ -2,6 +2,7 @@ module View.Input exposing
     ( enterPrivateId
     , passwordInput
     , searchDocsInput
+    , searchSourceText
     , specialInput
     , usernameInput
     )
@@ -11,6 +12,11 @@ import Element.Font as Font
 import Element.Input as Input
 import Types exposing (FrontendModel, FrontendMsg(..))
 import View.Utility exposing (onEnter)
+
+
+searchSourceText : FrontendModel -> Element FrontendMsg
+searchSourceText model =
+    inputFieldTemplate2 [ onEnter SyncLR |> E.htmlAttribute ] E.fill "Search ..." InputSearchSource model.searchSourceText
 
 
 enterPrivateId displayText =

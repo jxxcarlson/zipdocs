@@ -86,8 +86,20 @@ viewEditorAndRenderedText model =
         ]
 
 
+
+--
+
+
 aceEditor : Model -> Element FrontendMsg
 aceEditor model =
+    E.column [ E.moveUp 4 ]
+        [ E.row [ E.width E.fill ] [ View.Input.searchSourceText model ]
+        , aceEditor_ model
+        ]
+
+
+aceEditor_ : Model -> Element FrontendMsg
+aceEditor_ model =
     let
         onChange : Html.Attribute FrontendMsg
         onChange =
@@ -106,9 +118,11 @@ aceEditor model =
                 , HtmlAttr.attribute "softtabs" "true"
                 , HtmlAttr.attribute "navigateWithinSoftTabs" "true"
                 , HtmlAttr.attribute "fontsize" "12"
-                , HtmlAttr.style "height" (String.fromInt (panelHeight_ model) ++ "px")
+                , HtmlAttr.style "height" (String.fromInt (panelHeight_ model - 40) ++ "px")
                 , HtmlAttr.style "width" (String.fromInt (panelWidth_ model.windowWidth) ++ "px")
                 , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
+                , HtmlAttr.attribute "searchkey" model.searchSourceText
+                , HtmlAttr.attribute "searchcount" (String.fromInt model.searchCount)
                 ]
                 []
 
