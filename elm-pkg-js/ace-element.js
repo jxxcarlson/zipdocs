@@ -220,6 +220,7 @@ exports.init = async function(app) {
 
                        break
                     case "searchcount":
+                       console.log(this.editor.getSelectedText())
                        console.log("searchcount", newVal)
                        if (this.editor.found != null) {
                              this.editor.searchIndex = (this.editor.searchIndex + 1) % this.editor.found.length
