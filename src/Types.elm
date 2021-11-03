@@ -42,8 +42,12 @@ type alias FrontendModel =
     , showEditor : Bool
     , authorId : String
 
-    -- DOCUMENT
+    -- SYNC
+    , foundIds : List String
+    , foundIdIndex : Int
     , selectedId : String
+
+    -- DOCUMENT
     , parseData : ParseData
     , sourceText : String
     , searchCount : Int

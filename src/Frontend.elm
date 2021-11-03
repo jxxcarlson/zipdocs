@@ -81,8 +81,12 @@ init url key =
       , popupStatus = PopupClosed
       , showEditor = False
 
-      -- DOCUMENT
+      -- SYNC
+      , foundIds = []
+      , foundIdIndex = 0
       , selectedId = ""
+
+      -- DOCUMENT
       , parseData = { ast = [], accumulator = Block.Accumulator.init 4 }
       , searchCount = 0
       , searchSourceText = ""
@@ -268,43 +272,42 @@ update msg model =
 
         SyncLR ->
             let
-                fixId str =
-                    -- TODO: Review this. We should not have to do this
-                    let
-                        parts =
-                            String.split "." str
-                    in
-                    case
-                        List.head parts
-                    of
-                        Nothing ->
-                            str
+                data =
+                    if model.foundIdIndex == 0 then
+                        let
+                            foundIds_ =
+                                Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast |> List.map fixId_
 
-                        Just prefix ->
-                            let
-                                p =
-                                    String.toInt prefix |> Maybe.withDefault 0 |> (\x -> x + 1) |> String.fromInt
-                            in
-                            (p :: List.drop 1 parts) |> String.join "."
+                            id_ =
+                                List.head foundIds_ |> Maybe.withDefault "(nothing)"
+                        in
+                        { foundIds = foundIds_
+                        , foundIdIndex = 1
+                        , cmd = View.Utility.setViewportForElement (id_ ++ ".0")
+                        , selectedId = id_
+                        , searchCount = 0
+                        }
 
-                ids =
-                    Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast
-                        |> List.map fixId
-
-                ( cmd, id ) =
-                    case List.head ids of
-                        Nothing ->
-                            ( Cmd.none, "(no-id)" )
-
-                        Just id_ ->
-                            ( View.Utility.setViewportForElement (id_ ++ ".0"), id_ )
+                    else
+                        let
+                            id_ =
+                                List.Extra.getAt model.foundIdIndex model.foundIds |> Maybe.withDefault "(nothing)"
+                        in
+                        { foundIds = model.foundIds
+                        , foundIdIndex = modBy (List.length model.foundIds) (model.foundIdIndex + 1)
+                        , cmd = View.Utility.setViewportForElement (id_ ++ ".0")
+                        , selectedId = id_
+                        , searchCount = model.searchCount + 1
+                        }
             in
             ( { model
-                | selectedId = id
-                , searchCount = model.searchCount + 1
-                , message = ids |> String.join ", "
+                | selectedId = data.selectedId
+                , foundIds = data.foundIds
+                , foundIdIndex = data.foundIdIndex
+                , searchCount = data.searchCount
+                , message = ("[" ++ data.selectedId ++ "]") :: data.foundIds |> String.join ", "
               }
-            , cmd
+            , data.cmd
             )
 
         ChangePopupStatus status ->
@@ -438,6 +441,27 @@ update msg model =
 
         FinallyDoCleanPrintArtefacts privateId ->
             ( model, Cmd.none )
+
+
+fixId_ : String -> String
+fixId_ str =
+    -- TODO: Review this. We should not have to do this
+    let
+        parts =
+            String.split "." str
+    in
+    case
+        List.head parts
+    of
+        Nothing ->
+            str
+
+        Just prefix ->
+            let
+                p =
+                    String.toInt prefix |> Maybe.withDefault 0 |> (\x -> x + 1) |> String.fromInt
+            in
+            (p :: List.drop 1 parts) |> String.join "."
 
 
 setPermissions currentUser permissions document =
