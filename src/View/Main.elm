@@ -93,7 +93,11 @@ viewEditorAndRenderedText model =
 aceEditor : Model -> Element FrontendMsg
 aceEditor model =
     E.column [ E.moveUp 4 ]
-        [ E.row [ E.width E.fill ] [ View.Input.searchSourceText model ]
+        [ E.row [ E.width E.fill ]
+            [ View.Input.searchSourceText model
+            , E.el [ Background.color (E.rgb 0.4 0.4 0.4), Font.color (E.rgb 1 1 1), Font.size 14, E.width (E.px 40), E.centerY, E.centerX, E.height (E.px 33), E.paddingXY 6 6 ]
+                (E.text (String.fromInt (List.length model.foundIds)))
+            ]
         , aceEditor_ model
         ]
 

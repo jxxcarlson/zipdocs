@@ -85,11 +85,11 @@ init url key =
       , foundIds = []
       , foundIdIndex = 0
       , selectedId = ""
+      , searchCount = 0
+      , searchSourceText = ""
 
       -- DOCUMENT
       , parseData = { ast = [], accumulator = Block.Accumulator.init 4 }
-      , searchCount = 0
-      , searchSourceText = ""
       , lineNumber = 0
       , permissions = ReadOnly
       , sourceText = ""
@@ -268,7 +268,7 @@ update msg model =
                     ( { model | message = model.message ++ ", could not set viewport" }, Cmd.none )
 
         InputSearchSource str ->
-            ( { model | searchSourceText = str }, Cmd.none )
+            ( { model | searchSourceText = str, foundIdIndex = 0 }, Cmd.none )
 
         SyncLR ->
             let
