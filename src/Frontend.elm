@@ -258,18 +258,38 @@ update msg model =
         SetViewPortForElement result ->
             case result of
                 Ok ( element, viewport ) ->
-                    ( { model | message = "setting viewport" }, View.Utility.setViewPortForSelectedLine element viewport )
+                    ( { model | message = model.message ++ ", setting viewport" }, View.Utility.setViewPortForSelectedLine element viewport )
 
                 Err _ ->
-                    ( { model | message = "could not set viewport" }, Cmd.none )
+                    ( { model | message = model.message ++ ", could not set viewport" }, Cmd.none )
 
         InputSearchSource str ->
             ( { model | searchSourceText = str }, Cmd.none )
 
         SyncLR ->
             let
+                fixId str =
+                    -- TODO: Review this. We should not have to do this
+                    let
+                        parts =
+                            String.split "." str
+                    in
+                    case
+                        List.head parts
+                    of
+                        Nothing ->
+                            str
+
+                        Just prefix ->
+                            let
+                                p =
+                                    String.toInt prefix |> Maybe.withDefault 0 |> (\x -> x + 1) |> String.fromInt
+                            in
+                            (p :: List.drop 1 parts) |> String.join "."
+
                 ids =
                     Expression.ASTTools.findIdsMatchingText model.searchSourceText model.parseData.ast
+                        |> List.map fixId
 
                 ( cmd, id ) =
                     case List.head ids of
@@ -277,7 +297,7 @@ update msg model =
                             ( Cmd.none, "(no-id)" )
 
                         Just id_ ->
-                            ( View.Utility.setViewportForElement (id_ ++ ".0"), id_ ++ ".0" )
+                            ( View.Utility.setViewportForElement (id_ ++ ".0"), id_ )
             in
             ( { model
                 | selectedId = id
