@@ -95,11 +95,37 @@ aceEditor model =
     E.column [ E.moveUp 4 ]
         [ E.row [ E.width E.fill ]
             [ View.Input.searchSourceText model
-            , E.el [ Background.color (E.rgb 0.4 0.4 0.4), Font.color (E.rgb 1 1 1), Font.size 14, E.width (E.px 40), E.centerY, E.centerX, E.height (E.px 33), E.paddingXY 6 6 ]
-                (E.text (String.fromInt (List.length model.foundIds)))
+            , searchStatus model
             ]
         , aceEditor_ model
         ]
+
+
+searchStatus model =
+    let
+        n =
+            List.length model.foundIds
+
+        i =
+            if model.foundIdIndex == 0 then
+                n
+
+            else
+                model.foundIdIndex
+
+        msg =
+            if n > 0 then
+                String.fromInt i ++ "/" ++ String.fromInt n
+
+            else
+                ""
+    in
+    E.el [ Background.color (E.rgb 0.4 0.4 0.4), Font.color (E.rgb 1 1 1), Font.size 14, E.width (E.px 80), E.height (E.px 33) ]
+        (E.el [ E.centerX, E.centerY ] (E.text msg))
+
+
+
+--
 
 
 aceEditor_ : Model -> Element FrontendMsg
