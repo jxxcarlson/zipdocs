@@ -20,6 +20,7 @@ module View.Button exposing
     , signIn
     , signOut
     , startupHelp
+    , syncLR
     , toggleAppMode
     , toggleEditor
     , togglePublic
@@ -71,6 +72,10 @@ linkStyle =
 
 
 -- UI
+
+
+syncLR =
+    buttonTemplate [] SendSyncLR "Sync"
 
 
 toggleEditor model =

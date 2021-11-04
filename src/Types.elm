@@ -46,6 +46,7 @@ type alias FrontendModel =
     , foundIds : List String
     , foundIdIndex : Int
     , selectedId : String
+    , syncRequestIndex : Int
 
     -- DOCUMENT
     , parseData : ParseData
@@ -187,6 +188,7 @@ type FrontendMsg
       -- DOC
     | InputSearchSource String
     | SyncLR
+    | SendSyncLR
     | Render Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg

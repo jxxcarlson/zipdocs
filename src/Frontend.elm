@@ -87,6 +87,7 @@ init url key =
       , selectedId = ""
       , searchCount = 0
       , searchSourceText = ""
+      , syncRequestIndex = 0
 
       -- DOCUMENT
       , parseData = { ast = [], accumulator = Block.Accumulator.init 4 }
@@ -269,6 +270,9 @@ update msg model =
 
         InputSearchSource str ->
             ( { model | searchSourceText = str, foundIdIndex = 0 }, Cmd.none )
+
+        SendSyncLR ->
+            ( { model | syncRequestIndex = model.syncRequestIndex + 1 }, Cmd.none )
 
         SyncLR ->
             let

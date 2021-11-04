@@ -73,7 +73,8 @@ setViewPortForSelectedLine : Dom.Element -> Dom.Viewport -> Cmd FrontendMsg
 setViewPortForSelectedLine element viewport =
     let
         y =
-            viewport.viewport.y + element.element.y - element.element.height - 100
+            -- viewport.viewport.y + element.element.y - element.element.height - 100
+            viewport.viewport.y + element.element.y - element.element.height - 380
     in
     Task.attempt (\_ -> Types.NoOpFrontendMsg) (Dom.setViewportOf "__RENDERED_TEXT__" 0 y)
 
