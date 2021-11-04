@@ -1,17 +1,17 @@
-module Evergreen.V77.Types exposing (..)
+module Evergreen.V78.Types exposing (..)
 
 import Browser
 import Browser.Dom
 import Browser.Navigation
 import Debounce
 import Dict
-import Evergreen.V77.Abstract
-import Evergreen.V77.Authentication
-import Evergreen.V77.Document
-import Evergreen.V77.Lang.Lang
-import Evergreen.V77.Markup.API
-import Evergreen.V77.Render.Msg
-import Evergreen.V77.User
+import Evergreen.V78.Abstract
+import Evergreen.V78.Authentication
+import Evergreen.V78.Document
+import Evergreen.V78.Lang.Lang
+import Evergreen.V78.Markup.API
+import Evergreen.V78.Render.Msg
+import Evergreen.V78.User
 import File
 import Http
 import Random
@@ -54,7 +54,7 @@ type alias FrontendModel =
     , message : String
     , statusReport : List String
     , inputSpecial : String
-    , currentUser : Maybe Evergreen.V77.User.User
+    , currentUser : Maybe Evergreen.V78.User.User
     , inputUsername : String
     , inputPassword : String
     , appMode : AppMode
@@ -67,26 +67,26 @@ type alias FrontendModel =
     , foundIdIndex : Int
     , selectedId : String
     , syncRequestIndex : Int
-    , parseData : Evergreen.V77.Markup.API.ParseData
+    , parseData : Evergreen.V78.Markup.API.ParseData
     , sourceText : String
     , searchCount : Int
     , searchSourceText : String
     , lineNumber : Int
     , permissions : DocPermissions
     , debounce : Debounce.Debounce String
-    , currentDocument : Maybe Evergreen.V77.Document.Document
-    , documents : List Evergreen.V77.Document.Document
-    , language : Evergreen.V77.Lang.Lang.Lang
+    , currentDocument : Maybe Evergreen.V78.Document.Document
+    , documents : List Evergreen.V78.Document.Document
+    , language : Evergreen.V78.Lang.Lang.Lang
     , inputSearchKey : String
     , printingState : PrintingState
     , documentDeleteState : DocumentDeleteState
     , counter : Int
-    , publicDocuments : List Evergreen.V77.Document.Document
+    , publicDocuments : List Evergreen.V78.Document.Document
     }
 
 
 type alias DocumentDict =
-    Dict.Dict String Evergreen.V77.Document.Document
+    Dict.Dict String Evergreen.V78.Document.Document
 
 
 type alias AuthorDict =
@@ -98,7 +98,7 @@ type alias PublicIdDict =
 
 
 type alias AbstractDict =
-    Dict.Dict String Evergreen.V77.Abstract.Abstract
+    Dict.Dict String Evergreen.V78.Abstract.Abstract
 
 
 type alias UserId =
@@ -119,14 +119,14 @@ type alias BackendModel =
     , randomSeed : Random.Seed
     , uuidCount : Int
     , randomAtmosphericInt : Maybe Int
-    , authenticationDict : Evergreen.V77.Authentication.AuthenticationDict
+    , authenticationDict : Evergreen.V78.Authentication.AuthenticationDict
     , documentDict : DocumentDict
     , authorIdDict : AuthorDict
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , publicDocuments : List Evergreen.V77.Document.Document
-    , documents : List Evergreen.V77.Document.Document
+    , publicDocuments : List Evergreen.V78.Document.Document
+    , documents : List Evergreen.V78.Document.Document
     }
 
 
@@ -145,16 +145,17 @@ type FrontendMsg
     | RunSpecial
     | ExportJson
     | JsonRequested
-    | JsonSelected File.File
+    | JsonSelected File
     | JsonLoaded String
     | SignIn
     | SignOut
     | InputUsername String
     | InputPassword String
-    | InputSearchSource String
     | SyncLR
     | SendSyncLR
-    | Render Evergreen.V77.Render.Msg.MarkupMsg
+    | GetSelection String
+    | InputSearchSource String
+    | Render Evergreen.V78.Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg
     | Saved String
@@ -162,9 +163,9 @@ type FrontendMsg
     | Search
     | InputAuthorId String
     | NewDocument
-    | SetDocumentAsCurrent DocPermissions Evergreen.V77.Document.Document
-    | SetLanguage Evergreen.V77.Lang.Lang.Lang
-    | SetPublic Evergreen.V77.Document.Document Bool
+    | SetDocumentAsCurrent DocPermissions Evergreen.V78.Document.Document
+    | SetLanguage Evergreen.V78.Lang.Lang.Lang
+    | SetPublic Evergreen.V78.Document.Document Bool
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
     | ExportToMarkdown
@@ -183,14 +184,14 @@ type alias BackupOLD =
     , randomSeed : Random.Seed
     , uuidCount : Int
     , randomAtmosphericInt : Maybe Int
-    , authenticationDict : Evergreen.V77.Authentication.AuthenticationDict
+    , authenticationDict : Evergreen.V78.Authentication.AuthenticationDict
     , documentDict : DocumentDict
     , authorIdDict : AuthorDict
     , publicIdDict : PublicIdDict
     , abstractDict : AbstractDict
     , usersDocumentsDict : UsersDocumentsDict
-    , publicDocuments : List Evergreen.V77.Document.Document
-    , documents : List Evergreen.V77.Document.Document
+    , publicDocuments : List Evergreen.V78.Document.Document
+    , documents : List Evergreen.V78.Document.Document
     }
 
 
@@ -203,11 +204,11 @@ type ToBackend
     | SignInOrSignUp String String
     | FetchDocumentById String
     | GetPublicDocuments
-    | SaveDocument (Maybe Evergreen.V77.User.User) Evergreen.V77.Document.Document
+    | SaveDocument (Maybe Evergreen.V78.User.User) Evergreen.V78.Document.Document
     | GetDocumentByAuthorId String
     | GetDocumentByPublicId String
-    | CreateDocument (Maybe Evergreen.V77.User.User) Evergreen.V77.Document.Document
-    | StealDocument Evergreen.V77.User.User String
+    | CreateDocument (Maybe Evergreen.V78.User.User) Evergreen.V78.Document.Document
+    | StealDocument Evergreen.V78.User.User String
     | SearchForDocuments (Maybe String) String
 
 
@@ -220,10 +221,10 @@ type BackendMsg
 type ToFrontend
     = NoOpToFrontend
     | SendBackupData String
-    | SendUser Evergreen.V77.User.User
-    | SendDocument DocPermissions Evergreen.V77.Document.Document
-    | SendDocuments (List Evergreen.V77.Document.Document)
+    | SendUser Evergreen.V78.User.User
+    | SendDocument DocPermissions Evergreen.V78.Document.Document
+    | SendDocuments (List Evergreen.V78.Document.Document)
     | SendMessage String
     | StatusReport (List String)
     | SetShowEditor Bool
-    | GotPublicDocuments (List Evergreen.V77.Document.Document)
+    | GotPublicDocuments (List Evergreen.V78.Document.Document)
