@@ -149,8 +149,8 @@ aceEditor_ model =
     E.el [ E.htmlAttribute onChange, E.htmlAttribute onSelect ] <|
         E.html <|
             Html.node "ace-editor"
-                [ HtmlAttr.attribute "theme" "one_dark"
-                , HtmlAttr.attribute "wrapmode" "true"
+                [ --HtmlAttr.attribute "theme" "one_dark"
+                  HtmlAttr.attribute "wrapmode" "true"
                 , HtmlAttr.attribute "tabsize" "2"
                 , HtmlAttr.attribute "linenumber" (String.fromInt (model.lineNumber + 1))
                 , HtmlAttr.attribute "softtabs" "true"
