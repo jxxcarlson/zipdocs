@@ -187,6 +187,7 @@ type FrontendMsg
       -- DOC
     | InputSearchSource String
     | SyncLR
+    | SendSyncLR
     | Render Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg
