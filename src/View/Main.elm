@@ -161,7 +161,8 @@ aceEditor_ model =
                 , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
                 , HtmlAttr.attribute "searchkey" model.searchSourceText
                 , HtmlAttr.attribute "searchcount" (String.fromInt model.searchCount)
-                , HtmlAttr.attribute "sendsync" (String.fromInt model.syncRequestIndex)
+
+                --, HtmlAttr.attribute "sendsync" (String.fromInt model.syncRequestIndex)
                 ]
                 []
 
