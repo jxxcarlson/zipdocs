@@ -74,7 +74,8 @@ exports.init = async function(app) {
             // List of observed attributes
             static get observedAttributes() {
                 return ["theme", "mode", "fontsize", "softtabs", "tabsize", "readonly", "placeholder",
-                    "wrapmode", "min-lines", "max-lines", "line-numbers", "shadow-style", "text", "linenumber", "searchkey", "searchcount"]
+                    "wrapmode", "min-lines", "max-lines", "line-numbers", "shadow-style", "text", "linenumber"
+                    , "searchkey", "searchcount", "sendsync"]
             }
 
 
@@ -134,6 +135,33 @@ exports.init = async function(app) {
                         element.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: event }))
                     })
 
+                    /// BEGIN EXPERIMENT
+                    // https://stackoverflow.com/questions/24607730/ace-editor-javascript-triggering-a-tab-press-event-for-ace-editors-event-hand
+                    // https://stackoverflow.com/questions/42019836/correct-syntax-for-adding-a-command
+                    editor.commands.addCommand(
+                           {
+                               name: "foobar",
+                               bindKey: {win: "Esc", mac: "Esc"},
+                               exec: function(editor) { console.log("selected:", editor.getSelectedText()); },
+
+                           }
+
+                       )
+
+//                    const event = new Event('sendsync');
+//
+//                    // Listen for the event.
+//                    editor.addEventListener('sendsync', function (e) { console.log('SYNC') }, false);
+//
+//                    // Dispatch the event.
+//                    // CRASH // editor.dispatchEvent(event);
+//
+//                    editor.getSession().on("sendsync    ", (event) => {
+//                                            element.dispatchEvent(new CustomEvent("sendsync", { bubbles: true, composed: true, detail: event }))
+//                                        })
+
+
+                    // END EXPERIMENT
                 }
 
                 // Handle theme changes
@@ -207,6 +235,9 @@ exports.init = async function(app) {
                        this.editor.gotoLine(newVal, 0, true);
                        break
                     case "searchkey":
+//                       var selected = this.editor.getSelectedText()
+//                       var key = ""
+//                       if (selected == "") { key = newVal } else { key = selected }
                        this.editor.$search.set({ needle: newVal });
                        this.editor.found = this.editor.$search.findAll(this.editor.getSession())
                        this.editor.searchIndex = 0
@@ -231,6 +262,8 @@ exports.init = async function(app) {
 
                          }
                        break
+                    case "sendsync":
+                        console.log(this.editor.getSelectedText())
                     case "theme":
                         this.editor.setTheme(newVal)
                         break

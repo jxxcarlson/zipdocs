@@ -142,8 +142,8 @@ aceEditor_ model =
     E.el [ E.htmlAttribute onChange ] <|
         E.html <|
             Html.node "ace-editor"
-                [ HtmlAttr.attribute "theme" "twilight"
-                , HtmlAttr.attribute "wrapmode" "true"
+                [ -- HtmlAttr.attribute "theme" "twilight"
+                  HtmlAttr.attribute "wrapmode" "true"
                 , HtmlAttr.attribute "tabsize" "2"
                 , HtmlAttr.attribute "linenumber" (String.fromInt (model.lineNumber + 1))
                 , HtmlAttr.attribute "softtabs" "true"
@@ -154,8 +154,7 @@ aceEditor_ model =
                 , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
                 , HtmlAttr.attribute "searchkey" model.searchSourceText
                 , HtmlAttr.attribute "searchcount" (String.fromInt model.searchCount)
-
-                -- , HtmlAttr.attribute "sendsync" (String.fromInt model.searchCount)
+                , HtmlAttr.attribute "sendsync" (String.fromInt model.syncRequestIndex)
                 ]
                 []
 
