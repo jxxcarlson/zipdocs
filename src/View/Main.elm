@@ -95,6 +95,7 @@ aceEditor model =
     E.column [ E.moveUp 4 ]
         [ E.row [ E.width E.fill ]
             [ View.Input.searchSourceText model
+            , Button.syncLR
             , searchStatus model
             ]
         , aceEditor_ model
@@ -153,6 +154,7 @@ aceEditor_ model =
                 , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
                 , HtmlAttr.attribute "searchkey" model.searchSourceText
                 , HtmlAttr.attribute "searchcount" (String.fromInt model.searchCount)
+                , HtmlAttr.attribute "sendsync" (String.fromInt model.searchCount)
                 ]
                 []
 
