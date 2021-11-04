@@ -270,6 +270,9 @@ update msg model =
         InputSearchSource str ->
             ( { model | searchSourceText = str, foundIdIndex = 0 }, Cmd.none )
 
+        SendSyncLR ->
+            ( { model | searchCount = model.searchCount + 1 }, Cmd.none )
+
         SyncLR ->
             let
                 data =
