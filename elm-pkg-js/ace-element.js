@@ -16,6 +16,11 @@ exports.init = async function(app) {
 
    function initAce() {
         console.log("ace-element: I am now running initAce()");
+        ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/')
+        ace.config.setModuleUrl("ace/theme/one_dark", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-one_dark.min.js");
+        // https://cdnjs.com/libraries/ace
+        console.log("ace-element: setModuleUrl");
+
 
         let template = document.createElement("template")
         template.innerHTML = `
@@ -122,6 +127,7 @@ exports.init = async function(app) {
                     }
 
                     editor = ace.edit(container, options)
+
                     this.dispatchEvent(new CustomEvent("editor-ready", { bubbles: true, composed: true, detail: editor }))
                     this.editor = editor
                     this.editor.focus = editorFocus
