@@ -138,8 +138,15 @@ aceEditor_ model =
                 |> Json.Decode.at [ "target", "editorText" ]
                 |> Json.Decode.map InputText
                 |> Html.Events.on "change"
+
+        onSelect : Html.Attribute FrontendMsg
+        onSelect =
+            Json.Decode.string
+                |> Json.Decode.at [ "target", "editorText" ]
+                |> Json.Decode.map GetSelection
+                |> Html.Events.on "selectedtext"
     in
-    E.el [ E.htmlAttribute onChange ] <|
+    E.el [ E.htmlAttribute onChange, E.htmlAttribute onSelect ] <|
         E.html <|
             Html.node "ace-editor"
                 [ -- HtmlAttr.attribute "theme" "twilight"

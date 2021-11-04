@@ -138,15 +138,20 @@ exports.init = async function(app) {
                     /// BEGIN EXPERIMENT
                     // https://stackoverflow.com/questions/24607730/ace-editor-javascript-triggering-a-tab-press-event-for-ace-editors-event-hand
                     // https://stackoverflow.com/questions/42019836/correct-syntax-for-adding-a-command
+                   // https://stackoverflow.com/questions/28043954/keydown-event-on-ace-editor
+
                     editor.commands.addCommand(
-                           {
-                               name: "foobar",
-                               bindKey: {win: "Esc", mac: "Esc"},
-                               exec: function(editor) { console.log("selected:", editor.getSelectedText()); },
+                       { name: "foobar",
+                         bindKey: {win: "Esc", mac: "Esc"},
+                         exec: function(editor) { console.log("selected:", editor.getSelectedText()); },
+                       })
 
-                           }
-
-                       )
+                    editor.commands.on('afterExec', eventData => {
+                       if (eventData.command.name === 'foobar') {
+                                 console.log('SELECTION: ' + editor.getSelectedText());
+                                 element.dispatchEvent(new CustomEvent("selectedtext", { bubbles: true, composed: true, detail: event }))
+                             }
+                        });
 
 //                    const event = new Event('sendsync');
 //
