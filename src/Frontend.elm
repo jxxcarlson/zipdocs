@@ -271,6 +271,9 @@ update msg model =
         InputSearchSource str ->
             ( { model | searchSourceText = str, foundIdIndex = 0 }, Cmd.none )
 
+        GetSelection str ->
+            ( { model | message = "Selection: " ++ str }, Cmd.none )
+
         SendSyncLR ->
             ( { model | syncRequestIndex = model.syncRequestIndex + 1 }, Cmd.none )
 

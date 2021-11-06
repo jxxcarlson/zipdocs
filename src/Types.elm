@@ -185,10 +185,12 @@ type FrontendMsg
     | SignOut
     | InputUsername String
     | InputPassword String
-      -- DOC
-    | InputSearchSource String
+      -- SYNC
     | SyncLR
     | SendSyncLR
+    | GetSelection String
+      -- DOC
+    | InputSearchSource String
     | Render Render.Msg.MarkupMsg
     | InputText String
     | DebounceMsg Debounce.Msg
@@ -202,13 +204,16 @@ type FrontendMsg
     | SetPublic Document Bool
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
+      -- Export
     | ExportToMarkdown
     | ExportToLaTeX
     | Export
+      -- PDF
     | PrintToPDF
     | GotPdfLink (Result Http.Error String)
     | ChangePrintingState PrintingState
     | FinallyDoCleanPrintArtefacts String
+      ---
     | Help String
 
 

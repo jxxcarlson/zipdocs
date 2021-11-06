@@ -138,11 +138,18 @@ aceEditor_ model =
                 |> Json.Decode.at [ "target", "editorText" ]
                 |> Json.Decode.map InputText
                 |> Html.Events.on "change"
+
+        onSelect : Html.Attribute FrontendMsg
+        onSelect =
+            Json.Decode.string
+                |> Json.Decode.at [ "target", "editorText" ]
+                |> Json.Decode.map GetSelection
+                |> Html.Events.on "selectedtext"
     in
-    E.el [ E.htmlAttribute onChange ] <|
+    E.el [ E.htmlAttribute onChange, E.htmlAttribute onSelect ] <|
         E.html <|
             Html.node "ace-editor"
-                [ -- HtmlAttr.attribute "theme" "twilight"
+                [ --HtmlAttr.attribute "theme" "one_dark"
                   HtmlAttr.attribute "wrapmode" "true"
                 , HtmlAttr.attribute "tabsize" "2"
                 , HtmlAttr.attribute "linenumber" (String.fromInt (model.lineNumber + 1))
@@ -154,7 +161,8 @@ aceEditor_ model =
                 , HtmlAttr.attribute "text" (Maybe.map .content model.currentDocument |> Maybe.withDefault "")
                 , HtmlAttr.attribute "searchkey" model.searchSourceText
                 , HtmlAttr.attribute "searchcount" (String.fromInt model.searchCount)
-                , HtmlAttr.attribute "sendsync" (String.fromInt model.syncRequestIndex)
+
+                --, HtmlAttr.attribute "sendsync" (String.fromInt model.syncRequestIndex)
                 ]
                 []
 

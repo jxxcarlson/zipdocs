@@ -33,11 +33,18 @@ generatePdf document =
         { method = "POST"
         , headers = [ Http.header "Content-Type" "application/json" ]
         , url = "https://pdfserv.app/pdf"
-        , body = Http.jsonBody (encodeForPDF document.id "-" data.source data.imageUrls)
+        , body = Http.jsonBody (encodeForPDF document.id (normalizeTitle document.title) data.source data.imageUrls)
         , expect = Http.expectString GotPdfLink
         , timeout = Nothing
         , tracker = Nothing
         }
+
+
+normalizeTitle : String -> String
+normalizeTitle str =
+    str
+        |> String.toLower
+        |> String.replace " " "-"
 
 
 gotLink : FrontendModel -> Result error value -> ( FrontendModel, Cmd FrontendMsg )

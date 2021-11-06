@@ -16,6 +16,18 @@ exports.init = async function(app) {
 
    function initAce() {
         console.log("ace-element: I am now running initAce()");
+//        ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/')
+//        ace.config.setModuleUrl("ace/theme/one_dark", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-one_dark.min.js");
+//        // https://cdnjs.com/libraries/ace
+//        console.log("ace-element: setModuleUrl");
+
+
+//        ace.config.setModuleUrl(
+//            "ace/theme/one_dark",
+//            "http://ajaxorg.github.io/ace-builds/src-noconflict/theme-one_dark.js"
+//        )
+
+
 
         let template = document.createElement("template")
         template.innerHTML = `
@@ -111,6 +123,7 @@ exports.init = async function(app) {
 
                 if (this.editor) {
                     editor = this.editor
+                    editor.setTheme("ace/theme/one_dark")
                 } else {
                     const options = {}
                     // Support autoresizing
@@ -122,6 +135,7 @@ exports.init = async function(app) {
                     }
 
                     editor = ace.edit(container, options)
+
                     this.dispatchEvent(new CustomEvent("editor-ready", { bubbles: true, composed: true, detail: editor }))
                     this.editor = editor
                     this.editor.focus = editorFocus
@@ -138,15 +152,20 @@ exports.init = async function(app) {
                     /// BEGIN EXPERIMENT
                     // https://stackoverflow.com/questions/24607730/ace-editor-javascript-triggering-a-tab-press-event-for-ace-editors-event-hand
                     // https://stackoverflow.com/questions/42019836/correct-syntax-for-adding-a-command
+                   // https://stackoverflow.com/questions/28043954/keydown-event-on-ace-editor
+
                     editor.commands.addCommand(
-                           {
-                               name: "foobar",
-                               bindKey: {win: "Esc", mac: "Esc"},
-                               exec: function(editor) { console.log("selected:", editor.getSelectedText()); },
+                       { name: "foobar",
+                         bindKey: {win: "Esc", mac: "Esc"},
+                         exec: function(editor) { console.log("selected:", editor.getSelectedText()); },
+                       })
 
-                           }
-
-                       )
+                    editor.commands.on('afterExec', eventData => {
+                       if (eventData.command.name === 'foobar') {
+                                 console.log('SELECTION: ' + editor.getSelectedText());
+                                 element.dispatchEvent(new CustomEvent("selectedtext", { bubbles: true, composed: true, detail: event }))
+                             }
+                        });
 
 //                    const event = new Event('sendsync');
 //
