@@ -204,13 +204,16 @@ type FrontendMsg
     | SetPublic Document Bool
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
+      -- Export
     | ExportToMarkdown
     | ExportToLaTeX
     | Export
+      -- PDF
     | PrintToPDF
     | GotPdfLink (Result Http.Error String)
     | ChangePrintingState PrintingState
     | FinallyDoCleanPrintArtefacts String
+      ---
     | Help String
 
 

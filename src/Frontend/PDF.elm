@@ -40,6 +40,30 @@ generatePdf document =
         }
 
 
+
+--generatePdf : Document -> Cmd FrontendMsg
+--generatePdf document =
+--    let
+--        contentForExport =
+--            document.content
+--                |> Render.LaTeX.renderAsDocument
+--
+--        imageUrls =
+--            document.content
+--                |> Parser.RunLoopFunctions.rl
+--                |> Parser.Function.getElementTexts "image"
+--    in
+--    Http.request
+--        { method = "POST"
+--        , headers = [ Http.header "Content-Type" "application/json" ]
+--        , url = Config.pdfServer ++ "/pdf"
+--        , body = Http.jsonBody (Codec.encodeForPDF document.id "-" contentForExport imageUrls)
+--        , expect = Http.expectString GotPdfLink
+--        , timeout = Nothing
+--        , tracker = Nothing
+--        }
+
+
 gotLink : FrontendModel -> Result error value -> ( FrontendModel, Cmd FrontendMsg )
 gotLink model result =
     case result of
