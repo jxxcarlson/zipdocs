@@ -45,6 +45,7 @@ nameDict =
         , ( "date", "nothing" )
         , ( "tags", "nothing" )
         , ( "author", "nothing" )
+        , ( "image", "imagecenter" ) -- needed  for compatibitlity with pdserver for now
         ]
 
 
@@ -60,7 +61,30 @@ translateName str =
 
 renderNamedExpression : String -> List ExprM -> String
 renderNamedExpression name args =
-    "\\" ++ translateName name ++ renderArgs args
+    if name == "image" then
+        renderImageCenter args
+
+    else
+        "\\" ++ translateName name ++ renderArgs args
+
+
+renderImageCenter args =
+    case List.head (List.map renderExpression args) of
+        Just imageUrl ->
+            "\\imagecenter" ++ encloseWithBraces (fileReferenceFromUrl imageUrl)
+
+        Nothing ->
+            "bad imagecenter reference"
+
+
+fileReferenceFromUrl : String -> String
+fileReferenceFromUrl url =
+    case String.split "/" url |> List.reverse |> List.head of
+        Nothing ->
+            "no-file-name"
+
+        Just fileName ->
+            "image/" ++ fileName
 
 
 renderArgs : List ExprM -> String
