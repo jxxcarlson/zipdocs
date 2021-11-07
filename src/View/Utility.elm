@@ -107,7 +107,7 @@ katexCSS =
     Element.html <|
         Html.node "link"
             [ HA.attribute "rel" "stylesheet"
-            , HA.attribute "href" "https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+            , HA.attribute "href" "https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"
             ]
             []
 

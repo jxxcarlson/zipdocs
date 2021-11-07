@@ -390,8 +390,6 @@ viewRendered model width_ =
                 [ View.Utility.katexCSS
                 , E.column [ E.spacing 18, E.width (E.px (width_ - 60)) ]
                     (Markup.API.renderFancy (settings model.selectedId) doc.language model.counter (String.lines doc.content) |> List.map (E.map Render))
-
-                --  (Markup.API.compile Markup.API.Markdown model.counter (settings model) (String.lines model.currentDocument.content))
                 ]
 
 
