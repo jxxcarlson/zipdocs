@@ -5,8 +5,7 @@ exports.init =  async function(app) {
 
   var katexJs = document.createElement('script')
   katexJs.type = 'text/javascript'
-  //katexJs.src = "https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
-  katexJs.src ="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js"
+  katexJs.src ="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"
   katexJs.onload = initKatex
 
   document.head.appendChild(katexJs);
@@ -35,7 +34,7 @@ exports.init =  async function(app) {
             );
           let link = document.createElement('link');
           link.setAttribute('rel', 'stylesheet');
-          link.setAttribute('href', 'https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css');
+          link.setAttribute('href', 'https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css');
           this.shadowRoot.appendChild(link);
 
         }
