@@ -1,9 +1,8 @@
 module Lang.Token.Markdown exposing (specialParser, tokenParser)
 
 import Expression.Error exposing (..)
-import Expression.Token exposing (Token(..))
-import Lang.Lang exposing (Lang(..))
-import Lang.Token.Common as Common exposing (TokenParser, TokenState(..))
+import Expression.Token exposing (Token(..), TokenStack)
+import Lang.Token.Common as Common exposing (TokenParser)
 import Markup.ParserTools as ParserTools
 import Parser.Advanced as Parser exposing ((|.), (|=), Parser)
 
@@ -12,13 +11,29 @@ type alias TokenParser =
     Parser Context Problem Token
 
 
-tokenParser tokenState start =
-    case tokenState of
-        TSA ->
-            tokenParserA start
+{-| tokenParser calls a specific parser depending on the
+value of tokenState. tokenParserA does not recognize
+parentheses, while tokenParserB does. The transition from
+state TSA to TSB 0 is made when a left bracket is encountered.
+See Expression.Parser.nextTokenState. While in state TSB,
+k is incremented when a left parenthesis is encountered,
+decremented when a right parenthesis is encountered.
+When a white-space token is encountered in state TSB \_,
+the state changes to TSA.
 
-        TSB k ->
-            tokenParserB start
+All of this for the tokenizer to set things up to recognize
+"function call" in extended markdown of the form
+
+    [!function-name](arg_1)...(arg_n)
+
+-}
+tokenParser : TokenStack -> Int -> Parser Context Problem Token
+tokenParser tokenStack start =
+    if List.isEmpty tokenStack then
+        tokenParserA start
+
+    else
+        tokenParserB start
 
 
 tokenParserA start =
