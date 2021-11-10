@@ -28,12 +28,6 @@ generatePdf document =
     let
         data =
             LaTeX.Export.API.prepareForExportWithImages document.language document.content
-
-        _ =
-            Debug.log "doc" data.source
-
-        _ =
-            Debug.log "urls" data.imageUrls
     in
     Http.request
         { method = "POST"
