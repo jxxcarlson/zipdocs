@@ -396,6 +396,7 @@ update msg model =
                 , parseData = Markup.API.parse model.language model.counter (String.lines doc.content)
                 , message = Config.appUrl ++ "/p/" ++ doc.publicId ++ ", id = " ++ doc.id
                 , permissions = setPermissions model.currentUser permissions doc
+                , counter = model.counter + 1
               }
             , Cmd.none
             )
