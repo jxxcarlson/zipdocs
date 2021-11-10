@@ -1,5 +1,6 @@
 module Block.Function exposing
     ( changeStatusOfTopOfStack
+    , changeStatusOfTopOfStackRecursively
     , dumpStack
     , finalize
     , finalizeBlockStatus
@@ -28,6 +29,7 @@ module Block.Function exposing
     , reverseCommitted
     , reverseContents
     , setBlockStatus
+    , setBlockStatusRecursively
     , setStackBottomLevelAndName
     , shiftBlock
     , simpleCommit
@@ -39,7 +41,6 @@ import Block.Block as Block exposing (Block(..), BlockStatus(..), ExprM(..), SBl
 import Block.BlockTools as BlockTools
 import Block.Line exposing (BlockOption(..), LineData, LineType(..))
 import Block.State exposing (State)
-import Expression.Token exposing (Token(..))
 import Lang.Lang exposing (Lang(..))
 import Markup.Debugger exposing (..)
 import Markup.Meta
@@ -67,7 +68,7 @@ makeBlock_ state =
         BeginBlock RejectFirstLine mark ->
             SBlock mark [] (newMeta state) |> Just
 
-        BeginBlock AcceptFirstLine kind ->
+        BeginBlock AcceptFirstLine _ ->
             SBlock (nibble state.currentLineData.content |> transformMarkdownHeading)
                 [ SParagraph [ deleteSpaceDelimitedPrefix state.currentLineData.content ] (newMeta state) ]
                 (newMeta state)
@@ -128,6 +129,7 @@ newMeta state =
     , status = BlockUnfinished "begin"
     , id = String.fromInt state.blockCount
     , indent = state.currentLineData.indent
+    , label = ""
     }
 
 
@@ -211,7 +213,7 @@ fixMarkdownBlock block =
             { dummy | id = meta.id }
     in
     case block of
-        Paragraph [ ExprM "special" [ Block.TextM "title" meta1, Block.TextM argString meta2 ] meta3 ] meta4 ->
+        Paragraph [ ExprM "special" [ Block.TextM "title" meta1, Block.TextM argString meta2 ] _ ] meta4 ->
             Paragraph [ ExprM "title" [ Block.TextM (String.trim argString) meta1 ] (metaToExprMeta meta2) ] meta4
 
         -- This is where Markdown items (- Foo bar baz) are made to confirm with the standard AST
@@ -261,7 +263,7 @@ insertErrorMessage state =
 
         Just message ->
             { state
-                | committed = SParagraph [ renderErrorMessage state.lang message ] { status = BlockComplete, begin = 0, end = 0, id = "error", indent = 0 } :: state.committed
+                | committed = SParagraph [ renderErrorMessage state.lang message ] { status = BlockComplete, begin = 0, end = 0, id = "error", indent = 0, label = "" } :: state.committed
                 , errorMessage = Nothing
             }
 
@@ -343,10 +345,6 @@ getBlocksOfTheSameLevelHelper data =
 
 reduce : State -> State
 reduce state =
-    let
-        finalize_ =
-            reverseContents >> finalizeBlockStatus
-    in
     case state.stack of
         block1 :: ((SBlock name blocks meta) as block2) :: rest ->
             if indentationOfBlock block1 > indentationOfBlock block2 then
@@ -563,9 +561,37 @@ changeStatusOfTopOfStack status state =
             { state | stack = setBlockStatus status block :: List.drop 1 state.stack }
 
 
+changeStatusOfTopOfStackRecursively : BlockStatus -> State -> State
+changeStatusOfTopOfStackRecursively status state =
+    case stackTop state of
+        Nothing ->
+            state
+
+        Just block ->
+            { state | stack = setBlockStatusRecursively status block :: List.drop 1 state.stack }
+
+
 setBlockStatus : BlockStatus -> SBlock -> SBlock
 setBlockStatus status block =
     BlockTools.mapMeta (\meta -> { meta | status = status }) block
+
+
+setBlockStatusRecursively : BlockStatus -> SBlock -> SBlock
+setBlockStatusRecursively status block =
+    case block of
+        SBlock name children meta ->
+            setBlockStatus status (SBlock name (List.map (setBlockStatus status) children) meta)
+
+        anyBlock ->
+            setBlockStatus status anyBlock
+
+
+
+--type SBlock
+--    = SParagraph (List String) Meta
+--    | SVerbatimBlock String (List String) Meta
+--    | SBlock String (List SBlock) Meta
+--    | SError String
 
 
 simpleCommit : State -> State

@@ -8,10 +8,10 @@ import Element.Background as Background
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
-import Expression.AST exposing (Expr(..))
 import Expression.ASTTools as ASTTools
 import Html.Attributes
 import LaTeX.MathMacro
+import Markup.Meta exposing (ExpressionMeta)
 import Render.Math
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (Settings)
@@ -23,13 +23,17 @@ htmlId str =
 
 
 render : Int -> Settings -> Accumulator -> ExprM -> Element MarkupMsg
-render generation settings accumulator text =
-    case text of
+render generation settings accumulator expr =
+    case expr of
         TextM string meta ->
             Element.el [ Events.onClick (SendMeta meta), htmlId meta.id ] (Element.text string)
 
         ExprM name exprList meta ->
-            Element.el [ htmlId meta.id ] (renderMarked name generation settings accumulator exprList)
+            if String.contains "!" name then
+                expand (String.split "!" name) exprList meta |> render generation settings accumulator
+
+            else
+                Element.el [ htmlId meta.id ] (renderMarked name generation settings accumulator exprList)
 
         VerbatimM name str meta ->
             renderVerbatim name generation settings accumulator meta str
@@ -39,6 +43,20 @@ render generation settings accumulator text =
 
         ErrorM str ->
             Element.el [ Font.color redColor ] (Element.text str)
+
+
+expand : List String -> List ExprM -> ExpressionMeta -> ExprM
+expand names expressions exprMeta =
+    case List.head names of
+        Nothing ->
+            ExprM "null" [] exprMeta
+
+        Just firstName ->
+            let
+                firstExpr =
+                    ExprM firstName expressions exprMeta
+            in
+            List.foldl (\name acc -> ExprM name [ acc ] exprMeta) firstExpr (List.drop 1 names)
 
 
 errorText index str =
@@ -95,10 +113,15 @@ markupDict =
         , ( "texmacro", \g s a exprList -> texmacro g s a exprList )
         , ( "texarg", \g s a exprList -> texarg g s a exprList )
         , ( "abstract", \g s a exprList -> abstract g s a exprList )
-        , ( "tags", \g s a exprList -> Element.none )
-        , ( "author", \g s a exprList -> Element.none )
-        , ( "date", \g s a exprList -> Element.none )
+        , ( "tags", \_ _ _ _ -> Element.none )
+        , ( "author", \_ _ _ _ -> Element.none )
+        , ( "date", \_ _ _ _ -> Element.none )
         , ( "large", \g s a exprList -> large g s a exprList )
+        , ( "mdash", \g s a exprList -> Element.el [] (Element.text "—") )
+        , ( "ndash", \g s a exprList -> Element.el [] (Element.text "–") )
+        , ( "ref", \g s a exprList -> ref g s a exprList )
+        , ( "eqref", \g s a exprList -> eqref g s a exprList )
+        , ( "label", \g s a exprList -> Element.none )
 
         -- MiniLaTeX stuff
         , ( "term", \g s a exprList -> term g s a exprList )
@@ -108,8 +131,32 @@ markupDict =
         ]
 
 
+ref g s a exprList =
+    case ASTTools.exprListToStringList exprList of
+        xref :: [] ->
+            case Dict.get xref a.crossReferences of
+                Just val ->
+                    Element.el [] (Element.text val)
 
--- verbatimDict : Dict String (Int -> Settings -> Accumulator -> Meta -> String -> Element MarkupMsg)
+                Nothing ->
+                    Element.none
+
+        _ ->
+            Element.none
+
+
+eqref g s a exprList =
+    case ASTTools.exprListToStringList exprList of
+        xref :: [] ->
+            case Dict.get xref a.crossReferences of
+                Just val ->
+                    Element.el [] (Element.text <| "(" ++ val ++ ")")
+
+                Nothing ->
+                    Element.none
+
+        _ ->
+            Element.none
 
 
 verbatimDict =
@@ -145,8 +192,8 @@ specialFunctionsDict : Dict String (Settings -> String -> Element MarkupMsg)
 specialFunctionsDict =
     Dict.fromList
         [ ( "title", \s str -> title s str )
-        , ( "red", \s str -> Element.el [ Font.color redColor ] (Element.text str) )
-        , ( "blue", \s str -> Element.el [ Font.color blueColor ] (Element.text str) )
+        , ( "red", \_ str -> Element.el [ Font.color redColor ] (Element.text str) )
+        , ( "blue", \_ str -> Element.el [ Font.color blueColor ] (Element.text str) )
         ]
 
 
@@ -190,10 +237,6 @@ macro2 element g s a exprList =
 
 
 large g s a exprList =
-    simpleElement [ Font.size 18 ] g s a exprList
-
-
-author g s a exprList =
     simpleElement [ Font.size 18 ] g s a exprList
 
 
@@ -367,10 +410,6 @@ numberedItem generation settings accumulator str =
     Element.paragraph [ Element.width Element.fill ] [ Element.text (ASTTools.exprListToStringList str |> String.join " ") ]
 
 
-itemSymbol =
-    el [ Font.bold, Element.alignTop, Element.moveUp 1, Font.size 18 ] (Element.text "•")
-
-
 codeColor =
     -- E.rgb 0.2 0.5 1.0
     Element.rgb 0.4 0 0.8
@@ -511,13 +550,6 @@ heading4 g s a exprList =
         ]
 
 
-heading5 g s a exprList =
-    Element.column [ headingFontSize s 5, verticalPadding 14 0, makeId exprList ]
-        [ Element.link []
-            { url = internalLink "TITLE", label = Element.paragraph [] (elementLabel exprList :: List.map (render g s a) exprList) }
-        ]
-
-
 skip g s a exprList =
     let
         numVal : String -> Int
@@ -544,10 +576,6 @@ boldItalic g s a exprList =
 
 
 term g s a exprList =
-    simpleElement [ Font.italic, Element.paddingEach { left = 0, right = 2, top = 0, bottom = 0 } ] g s a exprList
-
-
-eqref g s a exprList =
     simpleElement [ Font.italic, Element.paddingEach { left = 0, right = 2, top = 0, bottom = 0 } ] g s a exprList
 
 

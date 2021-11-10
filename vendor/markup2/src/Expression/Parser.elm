@@ -2,7 +2,6 @@ module Expression.Parser exposing (parseExpr, parseToBlock, run)
 
 import Block.Block exposing (Block)
 import Block.BlockTools
-import Block.Function as Function
 import Either
 import Expression.AST as AST exposing (Expr)
 import Expression.Error exposing (ErrorData, Problem(..))
@@ -58,7 +57,7 @@ init : String -> State
 init str =
     { sourceText = str
     , scanPointer = 0
-    , tokenState = Lang.Token.Common.TSA
+    , tokenStack = []
     , end = String.length str
     , stack = []
     , committed = []
@@ -109,72 +108,57 @@ nextStep_ lang state =
 
 finalize : Lang -> State -> Step State State
 finalize lang state =
-    if state.stack == [] then
-        Done (state |> (\st -> { st | committed = List.reverse st.committed })) |> debugCyan "ReduceFinal (1)"
+    case Token.reduce state.tokenStack of
+        [] ->
+            if List.isEmpty state.stack then
+                Done (state |> (\st -> { st | committed = List.reverse st.committed })) |> debugCyan "ReduceFinal (1)"
 
-    else
-        recoverFromError lang state |> debugCyan "ReduceFinal (2, recoverFromErrors)"
+            else
+                recoverFromError lang state |> debugCyan "ReduceFinal (3, recoverFromErrors: tokenStack not empty)"
+
+        tokenStack ->
+            recoverFromTokenStackError lang { state | tokenStack = tokenStack } |> debugCyan "ReduceFinal (2, recoverFromErrors)"
 
 
-nextTokenState : Lang.Token.Common.TokenState -> Token -> Lang.Token.Common.TokenState
-nextTokenState tokenState token =
-    case tokenState of
-        Lang.Token.Common.TSA ->
-            case token of
-                Token.Symbol "[" _ ->
-                    Lang.Token.Common.TSB 0
-
-                _ ->
-                    tokenState
-
-        Lang.Token.Common.TSB k ->
-            case token of
-                Token.Symbol "(" _ ->
-                    Lang.Token.Common.TSB (k + 1)
-
-                Token.Symbol ")" _ ->
-                    Lang.Token.Common.TSB (k - 1)
-
-                _ ->
-                    case token of
-                        Token.Text s _ ->
-                            if String.trim s == "" then
-                                Lang.Token.Common.TSA
-
-                            else
-                                tokenState
-
-                        _ ->
-                            tokenState
+nextTokenState : Token -> Token.TokenStack -> Token.TokenStack
+nextTokenState token tokenStack =
+    Token.push token tokenStack |> debugRed "New TOKEN STACK"
 
 
 processToken : Lang -> State -> Step State State
 processToken lang state =
     let
         token =
-            Tokenizer.get lang state.tokenState state.scanPointer (String.dropLeft state.scanPointer state.sourceText)
+            Tokenizer.get lang state.tokenStack state.scanPointer (String.dropLeft state.scanPointer state.sourceText)
 
-        tokenState =
+        tokenStack =
             if lang == Markdown then
-                nextTokenState state.tokenState token
+                state.tokenStack
+                    |> Token.reduce
+                    |> debugRed "PROCESS TOKEN (A1)"
+                    |> Token.push token
+                    |> debugRed "PROCESS TOKEN (A2)"
 
             else
-                state.tokenState
+                state.tokenStack
 
         _ =
             debugBlue "n" state.count
 
         _ =
+            debugBlue "Token" token
+
+        _ =
             debugBlue "Stack" state.stack |> Simplify.stack
 
         _ =
-            debugBlue "Committed" state.committed |> Simplify.expressions
+            debugBlue "TokenStack" state.tokenStack
 
         _ =
-            debugBlue "Token" token
+            debugBlue "Committed" state.committed |> Simplify.expressions
     in
     case token of
-        TokenError errorData meta ->
+        TokenError errorData _ ->
             let
                 ( row, col ) =
                     List.map (\item -> ( item.row, item.col )) errorData |> List.Extra.last |> Maybe.withDefault ( 1, 1 ) |> debugBlue "(row, col)"
@@ -192,10 +176,10 @@ processToken lang state =
                     String.length unprocessedText |> debugBlue "tokenLength"
             in
             -- Oops, exit
-            Loop { state | tokenState = tokenState, committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
+            Loop { state | tokenStack = tokenStack, committed = errorValue state errorData :: state.committed, scanPointer = state.scanPointer + tokenLength + 1 }
 
         newToken ->
-            Loop (shift newToken (reduce lang { state | tokenState = tokenState })) |> debugRed "processToken, OUT"
+            Loop (shift newToken (reduce lang { state | tokenStack = tokenStack })) |> debugRed "processToken, OUT"
 
 
 errorValue : State -> ErrorData -> Expr
@@ -240,6 +224,19 @@ recoverFromError lang state =
 
         Markdown ->
             Markdown.recoverFromError state
+
+
+recoverFromTokenStackError : Lang -> State -> Step State State
+recoverFromTokenStackError lang state =
+    case lang of
+        L1 ->
+            Done state
+
+        MiniLaTeX ->
+            Done state
+
+        Markdown ->
+            Markdown.recoverFromTokenStackError state
 
 
 {-|

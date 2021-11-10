@@ -5,10 +5,12 @@ module Expression.ASTTools exposing
     , exprListToStringList
     , filter
     , filterBlockByName
+    , filterExpressions
     , filterStrictBlock
     , findIdsMatchingText
     , getHeadings
     , getItem
+    , getMacroValue
     , getText
     , listExprMToString
     , reverseContents
@@ -23,6 +25,54 @@ module Expression.ASTTools exposing
 import Block.Block exposing (Block(..), ExprM(..))
 import Markup.Meta as Meta
 import Maybe.Extra
+import Parser exposing ((|.), (|=), Parser)
+
+
+getMacroValue : String -> String -> Maybe String
+getMacroValue name str =
+    case Parser.run (macroValueParser2 name) str of
+        Ok out ->
+            Just out
+
+        Err _ ->
+            Nothing
+
+
+macroValueParser2 : String -> Parser String
+macroValueParser2 str =
+    prefixParser str |> Parser.andThen (\_ -> macroValueParser_ str)
+
+
+prefixParser : String -> Parser ()
+prefixParser str =
+    Parser.chompUntil ("\\" ++ str ++ "{") |> Parser.andThen (\_ -> Parser.symbol ("\\" ++ str ++ "{"))
+
+
+macroValueParser_ : String -> Parser String
+macroValueParser_ str =
+    Parser.succeed String.slice
+        |= Parser.getOffset
+        |. Parser.chompUntil "}"
+        |= Parser.getOffset
+        |= Parser.getSource
+
+
+matchName : String -> ExprM -> Bool
+matchName str expr =
+    case expr of
+        VerbatimM name _ _ ->
+            name == str
+
+        ExprM name _ _ ->
+            name == str
+
+        _ ->
+            False
+
+
+filterExpressions : String -> List ExprM -> List ExprM
+filterExpressions key expressions =
+    List.filter (matchName key) expressions
 
 
 {-| [Text "a b c d"] -> [Text "a b c", Text "d"]
@@ -186,25 +236,6 @@ exprContains key expr =
 
         ErrorM _ ->
             False
-
-
-exprToId : ExprM -> String
-exprToId expr =
-    case expr of
-        TextM _ meta ->
-            meta.id
-
-        VerbatimM _ _ meta ->
-            meta.id
-
-        ArgM _ meta ->
-            meta.id
-
-        ExprM _ _ meta ->
-            meta.id
-
-        ErrorM _ ->
-            "(error)"
 
 
 blockToId : Block -> String

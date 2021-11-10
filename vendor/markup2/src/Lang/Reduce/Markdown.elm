@@ -1,13 +1,14 @@
-module Lang.Reduce.Markdown exposing (normalizeExpr, recoverFromError, reduce, reduceFinal)
+module Lang.Reduce.Markdown exposing (normalizeExpr, recoverFromError, recoverFromTokenStackError, reduce, reduceFinal)
 
 import Either exposing (Either(..))
 import Expression.AST as AST exposing (Expr(..))
 import Expression.Stack as Stack exposing (Stack)
 import Expression.State exposing (State)
 import Expression.Token as Token exposing (Token(..))
+import Lang.Lang exposing (Lang(..))
 import List.Extra
 import Markup.Common exposing (Step(..))
-import Markup.Debugger exposing (debugGreen, debugNull, debugRed, debugYellow)
+import Markup.Debugger exposing (debugGreen, debugRed, debugYellow)
 
 
 reduceFinal : State -> State
@@ -17,26 +18,30 @@ reduceFinal state =
 
 reduceFinal_ : State -> State
 reduceFinal_ state =
-    case state.stack of
-        (Right (AST.Expr name args loc)) :: [] ->
-            { state | committed = AST.Expr name (List.reverse args) loc :: state.committed, stack = [] } |> debugRed "FINAL RULE 1"
+    if List.isEmpty state.tokenStack then
+        case state.stack of
+            (Right (AST.Expr name args loc)) :: [] ->
+                { state | committed = AST.Expr name (List.reverse args) loc :: state.committed, stack = [] } |> debugRed "FINAL RULE 1"
 
-        (Left (Token.Text str loc1)) :: (Right (AST.Expr name args loc2)) :: rest ->
-            let
-                _ =
-                    debugRed "reduceFinal, RULE 2, IN" state
-            in
-            reduceFinal { state | committed = AST.Text str loc1 :: AST.Expr name (List.reverse args) loc2 :: state.committed, stack = rest } |> debugYellow "FINAL RULE 2"
+            (Left (Token.Text str loc1)) :: (Right (AST.Expr name args loc2)) :: rest ->
+                let
+                    _ =
+                        debugRed "reduceFinal, RULE 2, IN" state
+                in
+                reduceFinal { state | committed = AST.Text str loc1 :: AST.Expr name (List.reverse args) loc2 :: state.committed, stack = rest } |> debugYellow "FINAL RULE 2"
 
-        (Left (Token.Text str loc)) :: rest ->
-            let
-                _ =
-                    debugRed "reduceFinal, RULE 3, IN" state
-            in
-            reduceFinal { state | committed = AST.Text str loc :: state.committed, stack = rest } |> debugYellow "FINAL RULE 2"
+            (Left (Token.Text str loc)) :: rest ->
+                let
+                    _ =
+                        debugRed "reduceFinal, RULE 3, IN" state
+                in
+                reduceFinal { state | committed = AST.Text str loc :: state.committed, stack = rest } |> debugYellow "FINAL RULE 2"
 
-        _ ->
-            state |> debugRed "FINAL RULE 4 (No action)"
+            _ ->
+                state |> debugRed "FINAL RULE 4 (No action)"
+
+    else
+        state
 
 
 {-|
@@ -63,10 +68,11 @@ reduce state =
                 state
 
         -- arg :: expr :: rest = expr with incorporated arg :: rest
-        (Right (AST.Arg args1 loc2)) :: (Right (AST.Expr name args2 loc3)) :: rest ->
+        (Right (AST.Arg args1 loc2)) :: (Right (AST.Expr name args2 _)) :: rest ->
             reduce { state | stack = Right (AST.Expr name (args1 ++ args2) { begin = loc2.begin, end = loc2.end }) :: rest } |> debugYellow "RED 3 (incorporate arg in expr)"
 
         -- THREE-TERM RULES
+        -- [ fname ] -> Right Expr fname []
         (Left (Token.Symbol "]" loc3)) :: (Left (Token.Text fName loc2)) :: (Left (Token.Symbol "[" loc1)) :: rest ->
             let
                 expr =
@@ -98,7 +104,7 @@ reduce state =
             reduce { state | stack = Right (AST.Expr name args { begin = loc1.begin, end = loc2.end }) :: rest } |> debugGreen "RED 8"
 
         -- Transform "{" .... "}" to Right (Arg [....])
-        (Left (Token.Symbol ")" loc3)) :: rest ->
+        (Left (Token.Symbol ")" _)) :: _ ->
             { state | stack = reduceArg state.stack } |> debugGreen "RULE 9"
 
         (Left (MarkedText "boldItalic" str loc)) :: [] ->
@@ -127,6 +133,7 @@ reduce state =
 
         _ ->
             -- If no rule applied, stop the recursion
+            -- { state | tokenStack = Token.reduce (List.reverse state.tokenStack) } |> debugGreen "RED 18, exit reduce"
             state |> debugGreen "RED 18, exit reduce"
 
 
@@ -149,6 +156,25 @@ normalizeExpr expr =
             expr
 
 
+recoverFromTokenStackError : State -> Step State State
+recoverFromTokenStackError state =
+    Done
+        ({ state
+            | -- stack = Left (Symbol "]" { begin = state.scanPointer, end = state.scanPointer + 1 }) :: state.stack
+              stack = []
+         }
+            |> reduce
+            |> (\st ->
+                    { st
+                        | committed =
+                            -- AST.Expr "red" [ AST.Text "ERROR" Token.dummyLoc ] Token.dummyLoc
+                            AST.Expr "red" [ AST.Text (Stack.dump Markdown state.stack) Token.dummyLoc ] Token.dummyLoc
+                                :: List.reverse st.committed
+                    }
+               )
+        )
+
+
 recoverFromError : State -> Step State State
 recoverFromError state =
     -- Use this when the loop is about to exit but the stack is non-empty.
@@ -162,7 +188,8 @@ recoverFromError state =
             Loop
                 { state
                     | stack = Left (Symbol "]" loc1) :: state.stack
-                    , committed = AST.Text "I corrected an unmatched '[' in the following expression: " Token.dummyLoc :: state.committed
+
+                    -- , committed = AST.Text "(1))" Token.dummyLoc :: state.committed
                 }
 
         (Left (Symbol "[" _)) :: (Left (Token.Text _ _)) :: (Left (Symbol "[" loc1)) :: _ ->
@@ -170,7 +197,7 @@ recoverFromError state =
                 { state
                     | stack = Left (Symbol "]" loc1) :: state.stack
                     , scanPointer = loc1.begin
-                    , committed = AST.Text "I corrected an unmatched '[' in the following expression: " Token.dummyLoc :: state.committed
+                    , committed = AST.Text "(2))" Token.dummyLoc :: state.committed
                 }
 
         (Right expr) :: [] ->
@@ -188,12 +215,13 @@ recoverFromError state =
                     String.dropLeft position state.sourceText
 
                 errorMessage =
-                    "Error! I added a bracket after this: " ++ errorText
+                    errorText |> debugYellow "ERROR MESSAGE"
             in
             Done
                 ({ state
-                    | stack = Left (Symbol "]" { begin = state.scanPointer, end = state.scanPointer + 1 }) :: state.stack
-                    , committed = AST.Text errorMessage Token.dummyLoc :: state.committed
+                    | -- stack = Left (Symbol "]" { begin = state.scanPointer, end = state.scanPointer + 1 }) :: state.stack
+                      stack = List.drop 1 state.stack
+                    , committed = AST.Expr "red" [ AST.Text errorMessage Token.dummyLoc ] Token.dummyLoc :: state.committed
                  }
                     |> reduce
                     |> (\st -> { st | committed = List.reverse st.committed })
@@ -238,9 +266,6 @@ reduceArg stack =
 
                 n =
                     List.length interior |> debugYellow "n, interior length"
-
-                found =
-                    List.Extra.getAt n rest |> debugYellow "found"
             in
             case ( List.Extra.getAt n rest, Stack.toExprList interior ) of
                 ( Nothing, _ ) ->

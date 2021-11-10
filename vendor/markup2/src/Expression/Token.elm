@@ -1,9 +1,13 @@
 module Expression.Token exposing
     ( Loc
     , Token(..)
+    , TokenStack
+    , TokenSymbol(..)
     , dummyLoc
     , isSymbol
     , length
+    , push
+    , reduce
     , startPositionOf
     , stringValue
     , symbolToString
@@ -23,12 +27,15 @@ type Token
     | TokenError ErrorData Loc
 
 
-
 symbolToString : Token -> Maybe String
-symbolToString token  =
+symbolToString token =
     case token of
-        Symbol str _-> Just str
-        _ -> Nothing
+        Symbol str _ ->
+            Just str
+
+        _ ->
+            Nothing
+
 
 stringValue : Token -> String
 stringValue token =
@@ -130,3 +137,67 @@ length token =
 
         TokenError _ loc ->
             loc.end - loc.begin
+
+
+type TokenSymbol
+    = LBR
+    | RBR
+    | LPAREN
+    | RPAREN
+
+
+reduce : TokenStack -> TokenStack
+reduce stack =
+    stack |> List.reverse |> reduce_ |> List.reverse
+
+
+reduce_ : TokenStack -> TokenStack
+reduce_ stack =
+    case stack of
+        LBR :: RBR :: LPAREN :: RPAREN :: [] ->
+            []
+
+        LBR :: RBR :: LPAREN :: RPAREN :: rest ->
+            reduce_ (LBR :: RBR :: rest)
+
+        LBR :: RBR :: LPAREN :: rest ->
+            case List.reverse rest of
+                RPAREN :: rest2 ->
+                    reduce_ (List.reverse rest2)
+
+                _ ->
+                    stack
+
+        LPAREN :: rest ->
+            case List.reverse rest of
+                RPAREN :: rest2 ->
+                    reduce_ (List.reverse rest2)
+
+                _ ->
+                    stack
+
+        _ ->
+            stack
+
+
+type alias TokenStack =
+    List TokenSymbol
+
+
+push : Token -> TokenStack -> TokenStack
+push token stack =
+    case token of
+        Symbol "[" _ ->
+            LBR :: stack
+
+        Symbol "]" _ ->
+            RBR :: stack
+
+        Symbol "(" _ ->
+            LPAREN :: stack
+
+        Symbol ")" _ ->
+            RPAREN :: stack
+
+        _ ->
+            stack

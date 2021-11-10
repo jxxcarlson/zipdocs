@@ -2,26 +2,13 @@ module Lang.Reduce.MiniLaTeX exposing (recoverFromError, reduce, reduceFinal)
 
 import Either exposing (Either(..))
 import Expression.AST as AST exposing (Expr)
-import Expression.ASTTools as ASTTools
 import Expression.Stack as Stack exposing (Stack)
 import Expression.State exposing (State)
 import Expression.Token as Token exposing (Token(..))
+import Lang.Lang exposing (Lang(..))
 import List.Extra
 import Markup.Common exposing (Step(..))
 import Markup.Debugger exposing (debugGreen, debugYellow)
-
-
-fixedPoint : State -> State
-fixedPoint state =
-    let
-        newState =
-            reduce state
-    in
-    if state == newState then
-        state |> debugGreen "EXIT FIXED POINT"
-
-    else
-        fixedPoint state |> debugGreen "FIXED POINT AGAIN"
 
 
 reduceFinal : State -> State
@@ -94,12 +81,16 @@ reduce state =
             { state | committed = AST.Expr fName [ AST.Expr (transformMacroNames exprName) args loc3 ] { begin = loc1.begin, end = loc4.end } :: state.committed, stack = rest } |> debugGreen "RULE 5"
 
         -- Transform "{" .... "}" to Right (Arg [....])
-        (Left (Token.Symbol "}" _)) :: rest ->
+        (Left (Token.Symbol "}" _)) :: _ ->
             { state | stack = reduceArg state.stack } |> debugGreen "RULE A"
 
         -- reduce  arg :: functionName :: rest to expr :: rest
         (Right (AST.Arg args loc2)) :: (Left (Token.FunctionName name loc1)) :: rest ->
             { state | stack = Right (AST.Expr name args { begin = loc1.begin, end = loc2.end }) :: rest } |> debugGreen "RULE B"
+
+        -- handle 0-arg functions
+        (Left (Token.Text str loc2)) :: (Left (Token.FunctionName name loc1)) :: [] ->
+            { state | committed = AST.Text str loc2 :: AST.Expr name [] loc1 :: state.committed, stack = [] } |> debugGreen "RULE: 0-ARG FN"
 
         -- create a verbatim expression from a verbatim token, clearing the stack
         (Left (Token.Verbatim label content loc)) :: [] ->
@@ -132,9 +123,6 @@ reduceArg stack =
 
                 n =
                     List.length interior |> debugYellow "n, interior length"
-
-                found =
-                    List.Extra.getAt n rest |> debugYellow "found"
             in
             case ( List.Extra.getAt n rest, Stack.toExprList interior ) of
                 ( Nothing, _ ) ->
@@ -225,23 +213,6 @@ recoverFromError state =
         (Left (Symbol "{" loc2)) :: (Left (FunctionName name loc1)) :: rest ->
             Loop { state | committed = AST.Expr "red" [ AST.Text ("\\" ++ name ++ "{??}") { begin = loc1.begin, end = loc2.end } ] { begin = loc1.begin, end = loc2.end } :: state.committed, stack = rest }
 
-        -- commit text at the top of the stack
-        --(Left (Token.Text content loc1)) :: rest ->
-        --    let
-        --        _ =
-        --            debug4 "recover, RULE" 3
-        --    in
-        --    Loop { state | committed = AST.Text content loc1 :: state.committed, stack = rest }
-        --(Left (Token.Text content loc1)) :: (Left (Symbol "{" _)) :: [] ->
-        --    let
-        --        _ =
-        --            debug1 "RECOVER" 1
-        --    in
-        --    Loop
-        --        { state
-        --            | stack = Left (Symbol "}" loc1) :: state.stack
-        --            , committed = AST.Expr "red" [ AST.Text content loc1 ] loc1 :: tstate.committed
-        --        }
         (Left (Symbol "{" loc1)) :: (Left (Token.Text _ _)) :: (Left (Symbol "{" _)) :: _ ->
             Loop
                 { state
@@ -254,7 +225,7 @@ recoverFromError state =
             Done
                 ({ state
                     | stack = Left (Symbol "}" { begin = state.scanPointer, end = state.scanPointer + 1 }) :: state.stack
-                    , committed = AST.Expr "red" [ AST.Text (Stack.dump state.stack) Token.dummyLoc ] Token.dummyLoc :: state.committed
+                    , committed = AST.Expr "red" [ AST.Text (Stack.dump MiniLaTeX state.stack) Token.dummyLoc ] Token.dummyLoc :: state.committed
                  }
                     |> reduce
                     |> (\st -> { st | committed = List.reverse st.committed })

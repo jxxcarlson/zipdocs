@@ -3,7 +3,7 @@ module Lang.Token.L1 exposing (tokenParser)
 import Expression.Error exposing (..)
 import Expression.Token exposing (Token(..))
 import Lang.Lang exposing (Lang(..))
-import Lang.Token.Common as Common exposing (TokenParser, TokenState(..))
+import Lang.Token.Common as Common exposing (TokenParser)
 import Markup.ParserTools as ParserTools
 import Parser.Advanced as Parser exposing (Parser)
 
@@ -12,6 +12,11 @@ type alias TokenParser =
     Parser Context Problem Token
 
 
+{-| Expression.Tokenizer.tokenParser calls L1.tokenParser
+with arguments tokenStack and start. The first argument
+is not used (although it is for the Markdown parser)
+-}
+tokenParser : a -> Int -> TokenParser
 tokenParser _ start =
     tokenParser_ start
 

@@ -6,18 +6,15 @@ module Block.Library exposing
 import Block.Block as Block exposing (BlockStatus(..), SBlock(..))
 import Block.BlockTools as BlockTools
 import Block.Function as Function exposing (simpleCommit)
-import Block.Line exposing (BlockOption(..), LineData, LineType(..))
+import Block.Line exposing (LineData, LineType(..))
 import Block.State exposing (State)
-import LaTeX.MathMacro
 import Lang.Lang exposing (Lang(..))
 import Lang.LineType.L1
 import Lang.LineType.Markdown
 import Lang.LineType.MiniLaTeX
-import Markup.Debugger exposing (debug3, debugBlue, debugCyan, debugMagenta, debugRed, debugYellow)
-import Markup.ParserTools
+import Markup.Debugger exposing (debugBlue, debugCyan, debugMagenta, debugRed, debugYellow)
 import Markup.Simplify as Simplify
-import Parser.Advanced
-import Utility exposing (ifApply)
+import Utility
 
 
 {-|
@@ -113,6 +110,9 @@ processLine language state =
             in
             state
 
+        Comment ->
+            { state | index = state.index + 1 }
+
 
 
 -- ORDINARY LINE
@@ -157,7 +157,7 @@ handleUnterminatedBlock mStr state =
 
 
 unterminatedBlockNames =
-    [ "item" ]
+    [ "item", "quotation" ]
 
 
 postMessageWithBlockUnfinished : String -> State -> State
@@ -258,7 +258,7 @@ handleOrdinaryLine state =
                         -- TODO. In fact, in the else clause, we should reduce the stack, then create the block.
                         if state.initialBlockIndent == Function.indentationOfCurrentBlock state then
                             addLineToStackTop
-                                { state | errorMessage = Just { red = "Below: you forgot to indent the math text. This is needed for all blocks.  Also, remember the trailing dollar signs", blue = "" } }
+                                { state | errorMessage = Just { red = "Below: did you forgot to indent the text?", blue = "" } }
                                 |> Function.insertErrorMessage
 
                         else
@@ -449,6 +449,7 @@ newMeta str state =
     , status = BlockUnfinished str
     , id = String.fromInt state.generation ++ "." ++ String.fromInt state.blockCount
     , indent = state.currentLineData.indent
+    , label = ""
     }
 
 
@@ -491,7 +492,7 @@ addLineToBlocks index lineData blocks =
         rest ->
             -- TODO: the id field is questionable
             -- otherwise we prepend a paragraph with the given line
-            SParagraph [ lineData.content ] { status = BlockComplete, begin = index, end = index, id = String.fromInt index, indent = lineData.indent } :: rest
+            SParagraph [ lineData.content ] { status = BlockComplete, begin = index, end = index, id = String.fromInt index, indent = lineData.indent, label = "" } :: rest
 
 
 
@@ -508,7 +509,7 @@ endBlock name state =
             state
 
         -- This is an error, to (TODO) we need to figure out what to do.
-        Just top ->
+        Just _ ->
             (case Function.nameOfStackTop state of
                 Nothing ->
                     -- the block is a paragraph, hence has no name
@@ -592,21 +593,6 @@ commitBlock_ state =
 
 getBlockName sblock =
     BlockTools.sblockName sblock |> Maybe.withDefault "UNNAMED"
-
-
-nibble : String -> String
-nibble str =
-    case Parser.Advanced.run (Markup.ParserTools.text (\c_ -> c_ /= ' ') (\c_ -> c_ /= ' ')) str of
-        Ok stringData ->
-            stringData.content
-
-        Err _ ->
-            ""
-
-
-deleteSpaceDelimitedPrefix : String -> String
-deleteSpaceDelimitedPrefix str =
-    String.replace (nibble str ++ " ") "" str
 
 
 
