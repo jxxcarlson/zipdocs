@@ -398,7 +398,7 @@ update msg model =
                 , permissions = setPermissions model.currentUser permissions doc
                 , counter = model.counter + 1
               }
-            , Cmd.none
+            , View.Utility.setViewPortToTop
             )
 
         SetLanguage lang ->
