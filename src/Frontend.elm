@@ -104,6 +104,7 @@ init url key =
       , documentDeleteState = WaitingForDeleteAction
       , language = Lang.MiniLaTeX
       , publicDocuments = []
+      , deleteDocumentState = WaitingForDeleteAction
       }
     , Cmd.batch [ Frontend.Cmd.setupWindow, urlAction url.path, sendToBackend GetPublicDocuments ]
     )
@@ -388,6 +389,24 @@ update msg model =
 
         NewDocument ->
             Frontend.Update.newDocument model
+
+        SetDeleteDocumentState s ->
+            ( { model | deleteDocumentState = s }, Cmd.none )
+
+        DeleteDocument ->
+            case model.currentDocument of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just doc ->
+                    ( { model
+                        | currentDocument = Just Docs.deleted
+                        , language = Markdown
+                        , documents = List.filter (\d -> d.id /= doc.id) model.documents
+                        , deleteDocumentState = WaitingForDeleteAction
+                      }
+                    , sendToBackend (DeleteDocumentBE doc)
+                    )
 
         SetDocumentAsCurrent permissions doc ->
             ( { model

@@ -1,5 +1,7 @@
 module View.Button exposing
-    ( closeEditor
+    ( cancelDeleteDocument
+    , closeEditor
+    , deleteDocument
     , export
     , exportJson
     , exportToLaTeX
@@ -72,6 +74,50 @@ linkStyle =
 
 
 -- UI
+
+
+deleteDocument : FrontendModel -> Element FrontendMsg
+deleteDocument model =
+    let
+        authorName : Maybe String
+        authorName =
+            Maybe.andThen .author model.currentDocument
+
+        userName : Maybe String
+        userName =
+            Maybe.map .username model.currentUser
+    in
+    if userName /= Nothing && authorName == userName then
+        deleteDocument_ model
+
+    else
+        E.none
+
+
+
+--if Maybe.map .author model.currentDocument == Maybe.andThen .username model.currentUser then
+--    deleteDocument_ model
+--
+--else
+--    E.none
+
+
+deleteDocument_ model =
+    case model.deleteDocumentState of
+        WaitingForDeleteAction ->
+            buttonTemplate [] (SetDeleteDocumentState CanDelete) "Delete"
+
+        CanDelete ->
+            buttonTemplate [ Background.color (E.rgb 0.8 0 0) ] DeleteDocument "Forever?"
+
+
+cancelDeleteDocument model =
+    case model.deleteDocumentState of
+        WaitingForDeleteAction ->
+            E.none
+
+        CanDelete ->
+            buttonTemplate [ Background.color (E.rgb 0 0 0.8) ] (SetDeleteDocumentState WaitingForDeleteAction) "Cancel"
 
 
 syncLR =

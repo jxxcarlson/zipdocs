@@ -270,6 +270,9 @@ updateFromFrontend sessionId clientId msg model =
         StealDocument user id ->
             stealId user id model |> Cmd.Extra.withNoCmd
 
+        DeleteDocumentBE doc ->
+            Backend.Update.deleteDocument doc model
+
 
 makeLink : String -> DocumentDict -> AbstractDict -> Maybe DocumentLink
 makeLink docId documentDict abstractDict =

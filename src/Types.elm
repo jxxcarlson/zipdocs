@@ -64,6 +64,7 @@ type alias FrontendModel =
     , documentDeleteState : DocumentDeleteState
     , counter : Int
     , publicDocuments : List Document
+    , deleteDocumentState : DocumentDeleteState
     }
 
 
@@ -204,6 +205,8 @@ type FrontendMsg
     | SetPublic Document Bool
     | AskFoDocumentById String
     | AskForDocumentByAuthorId
+    | DeleteDocument
+    | SetDeleteDocumentState DocumentDeleteState
       -- Export
     | ExportToMarkdown
     | ExportToLaTeX
@@ -225,6 +228,7 @@ type PrintingState
 
 type DocumentDeleteState
     = WaitingForDeleteAction
+    | CanDelete
 
 
 type SearchTerm
@@ -249,6 +253,7 @@ type ToBackend
     | CreateDocument (Maybe User) Document
     | StealDocument User String
     | SearchForDocuments (Maybe String) String
+    | DeleteDocumentBE Document
 
 
 type BackendMsg

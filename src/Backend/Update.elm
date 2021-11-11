@@ -1,4 +1,10 @@
-module Backend.Update exposing (getUserDocuments, gotAtmosphericRandomNumber, setupUser, updateAbstracts)
+module Backend.Update exposing
+    ( deleteDocument
+    , getUserDocuments
+    , gotAtmosphericRandomNumber
+    , setupUser
+    , updateAbstracts
+    )
 
 import Abstract
 import Authentication
@@ -19,6 +25,43 @@ type alias Model =
 
 
 -- SYSTEM
+
+
+deleteDocument : Document.Document -> Model -> ( Model, Cmd msg )
+deleteDocument doc model =
+    let
+        documentDict =
+            Dict.remove doc.id model.documentDict
+
+        publicIdDict =
+            Dict.remove doc.id model.publicIdDict
+
+        abstractDict =
+            Dict.remove doc.id model.abstractDict
+
+        usersDocumentsDict =
+            Dict.remove doc.id model.usersDocumentsDict
+
+        authorIdDict =
+            Dict.remove doc.id model.authorIdDict
+
+        publicDocuments =
+            List.filter (\d -> d.id /= doc.id) model.publicDocuments
+
+        documents =
+            List.filter (\d -> d.id /= doc.id) model.documents
+    in
+    ( { model
+        | documentDict = documentDict
+        , authorIdDict = authorIdDict
+        , publicIdDict = publicIdDict
+        , abstractDict = abstractDict
+        , usersDocumentsDict = usersDocumentsDict
+        , publicDocuments = publicDocuments
+        , documents = documents
+      }
+    , Cmd.none
+    )
 
 
 gotAtmosphericRandomNumber : Model -> Result error String -> ( Model, Cmd msg )

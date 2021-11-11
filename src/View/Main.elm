@@ -298,6 +298,8 @@ messageRow model =
 header model width_ =
     E.row [ E.spacing 12, E.width E.fill ]
         [ Button.newDocument
+        , Button.deleteDocument model
+        , Button.cancelDeleteDocument model
         , View.Utility.showIf model.showEditor Button.closeEditor
         , View.Utility.hideIf (model.currentUser == Nothing || model.permissions == ReadOnly || model.showEditor) Button.openEditor
         , Button.miniLaTeXLanguageButton model
